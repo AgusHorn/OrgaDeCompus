@@ -7,13 +7,25 @@
 extern size_t qsort();//TODO: Definir parametros
 
 
+//Imprime por salida estandar el mensaje de ayuda.
 void print_help(){
-  //TODO: Que mensaje de ayuda vamos a dar
-  printf("Imprimo la ayuda.\n");
+  printf("Usage:\n\
+\tqsort -h\n\
+\tqsort -V\n\
+\tqsort [options] archivo\n\
+Options:\n\
+\t-h, --help\t\
+Imprime ayuda.\n\
+\t-V, --version\t Versión del programa.\n\
+\t-o, --output\t\
+Archivo de salida.\n\
+\t-n, --numeric\t Ordenar los datos numéricamente en vez de alfabéticamente.\n\
+Examples:\n\
+\tqsort -n numeros.txt\n");
 }
 
 void print_version(){
-  //TODO: Nose a que se refiere con eso
+  //TODO: Nose a que se refiere con version
   printf("Imprimo la version.\n");
 }
 

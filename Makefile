@@ -1,16 +1,16 @@
 CFLAGS :=  -ggdb -Wall
 CC := gcc
-EXE = main
+EXE = qsort
 
 
 OBJS = main.o qsort.o
 
 
 
-all: main.o qsort.o main
+all: main.o qsort.o qsort
 
 
-main:
+qsort:
 		$(CC) $(CCFLAGS) -o $(EXE) $(OBJS)
 
 main.o:main.c
