@@ -2,7 +2,7 @@
 #define QSORT_H
 
 
-size_t qsort(char** ini_arreglo, int inicio, int fin );
+void qsort(char** izq, char** der, int num);
 
 
 
