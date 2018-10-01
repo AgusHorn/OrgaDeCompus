@@ -4,8 +4,11 @@
 
 #include <unistd.h>
 
-extern size_t qsort();//TODO: Definir parametros
-
+#ifdef USE_QSORT
+extern size_t qsort(char** ini_arreglo, int inicio, int fin);//TODO: Definir parametros
+#else
+#include "qsort2.h"//para usar la version de c.
+#endif
 
 //Imprime por salida estandar el mensaje de ayuda.
 void print_help(){
@@ -63,5 +66,6 @@ int main(int argc, char *argv[]){
         return 1;
       }
     }
-    return qsort();
+    char*hola[5]={"d","a","e","b","c"};
+    return qsort(hola,0,4);//llamado harcodeado a qsort para probar que funcione la version de c.
 }
