@@ -1,4 +1,4 @@
-CFLAGS :=  -ggdb -Wall
+CFLAGS :=  -g -Wall
 CC := gcc
 EXE = qsort
 
@@ -14,7 +14,7 @@ main.o:main.c qsort2.h
 
 
 qsort.o:qsort.S qsort2.c qsort2.h
-		$(CC) -c -o qsort.o qsort.S -DUSE_QSORT $(CCFLAGS) || $(CC) -c -o qsort.o qsort2.c $(CCFLAGS)
+		$(CC) -c -o qsort.o qsort.S -DUSE_QSORT $(CCFLAGS) || $(CC) -std=c99 -c -o qsort.o qsort2.c $(CCFLAGS)
 
 clean:
 		rm -f $(EXE) $(OBJS) core

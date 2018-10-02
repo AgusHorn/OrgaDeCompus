@@ -1,10 +1,13 @@
+#define _GNU_SOURCE
+#define _POSIX_C_SOURCE 200809L //getline
+
 #include <ctype.h>
 #include <stdio.h>
 #include <stdbool.h>
 #include <string.h>
 #include <unistd.h>
 #include <stdlib.h>
-#define _POSIX_C_SOURCE 200809L //getline
+
 
 #ifdef USE_QSORT
 extern void qsort2(char** izq, char** der, int num);//TODO: Definir parametros
@@ -79,7 +82,8 @@ char** cargar_archivo(char* input, size_t cant){
 }
 
 void liberar_arreglo(char** array, size_t cant){
-  for(size_t i = 0; i < cant; i++){
+  size_t i;
+  for(i = 0; i < cant; i++){
     free(array[i]);
   }
   free(array);
@@ -99,7 +103,8 @@ bool escribir_archivo(char** array, size_t n, char* output){
     fprintf (stderr,"Error al tratar de abrir archivo output.\n");
     return false;//fallo
   }
-  for(size_t i = 0; i<n; i++ ){
+  size_t i;
+  for(i = 0; i<n; i++ ){
     fputs(array[i],archivo);
   }
   return true;

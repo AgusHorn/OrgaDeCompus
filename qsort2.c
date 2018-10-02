@@ -14,7 +14,8 @@ char** pivotear(char** izq, char** der, int num){
     char* valor_pivote;
     pivote = izq;//elegimos pivote izquierdo, se puede cambiar eventualmente.
     valor_pivote = *pivote;
-    for(int i=1; izq+i <= der; i++){
+    int i;
+    for(i=1; izq+i <= der; i++){
 
       if(num == 0 && strcmp(*(izq+i), valor_pivote) < 0){
         swap(izq+i,pivote);
