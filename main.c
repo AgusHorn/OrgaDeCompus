@@ -1,11 +1,13 @@
 #include <ctype.h>
 #include <stdio.h>
 #include <stdbool.h>
-
+#include <string.h>
 #include <unistd.h>
+#include <stdlib.h>
+#define _POSIX_C_SOURCE 200809L //getline
 
 #ifdef USE_QSORT
-extern void qsort(char** izq, char** der, int num);//TODO: Definir parametros
+extern void qsort2(char** izq, char** der, int num);//TODO: Definir parametros
 #else
 #include "qsort2.h"//para usar la version de c.
 #endif
@@ -32,6 +34,69 @@ void print_version(){
   printf("Imprimo la version.\n");
 }
 
+size_t contar_lineas(char* input){
+  FILE* archivo = fopen(input,"r");
+	if(!archivo){
+    fprintf (stderr,"Error al tratar de abrir archivo.\n");
+    return 0;//fallo
+  }
+  size_t lineas = 0;
+  char* linea = NULL; size_t capacidad = 0; ssize_t leidos;
+
+  while((leidos = getline(&linea,&capacidad,archivo)) > 0){
+    lineas++;
+  }
+  free(linea);
+  fclose(archivo);
+  return lineas;
+}
+
+char** cargar_archivo(char* input, size_t cant){
+
+  char** array = malloc(cant * sizeof(char*));
+
+  if(!array){
+    fprintf (stderr,"Error al pedir memoria para el arreglo.\n");
+    return 0;
+  }
+
+  FILE* archivo = fopen(input,"r");
+	if(!archivo){
+    fprintf (stderr,"Error al tratar de abrir archivo.\n");
+    return 0;//fallo
+  }
+
+  char* linea = NULL; size_t capacidad = 0; ssize_t leidos;
+  size_t i = 0;
+  while((leidos = getline(&linea,&capacidad,archivo)) > 0){
+    array[i] = strdup(linea);
+    i++;
+  }
+
+  free(linea);
+  fclose(archivo);
+  return array;
+}
+
+
+
+bool escribir_archivo(char** array, size_t n, char* output){
+  FILE* archivo;
+  if(strcmp(output,"-")== 0){
+    archivo = stdout;
+  }
+  else{
+      archivo = fopen(output,"w");
+  }
+  if(!archivo){
+    fprintf (stderr,"Error al tratar de abrir archivo output.\n");
+    return false;//fallo
+  }
+  for(size_t i = 0; i<n; i++ ){
+    fputs(array[i],archivo);
+  }
+  return true;
+}
 
 
 int main(int argc, char *argv[]){
@@ -66,7 +131,23 @@ int main(int argc, char *argv[]){
         return 1;
       }
     }
-    char*hola[5]={"d","a","e","b","c"};
-    qsort(&hola[0], &hola[4], 0);//llamado harcodeado a qsort para probar que funcione la version de c.
+
+    size_t cant_lineas = contar_lineas(argv[argc-1]);
+    char** array_lineas = cargar_archivo(argv[argc-1],cant_lineas);
+    if(!array_lineas){
+      //TODO:mensaje de error
+      return 1;
+    }
+    int n = 0;
+    if(numeric){
+      n = 1;
+    }
+    qsort2(&array_lineas[0],&array_lineas[cant_lineas-1],n);
+    bool escribio = escribir_archivo(array_lineas, cant_lineas,output);
+    if(!escribio){
+      fprintf (stderr,"Error al escribir el archivo de output.\n");
+      return 1;
+    }
+    free(array_lineas);
     return 0;
 }
