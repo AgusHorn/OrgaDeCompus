@@ -78,6 +78,13 @@ char** cargar_archivo(char* input, size_t cant){
   return array;
 }
 
+void liberar_arreglo(char** array, size_t cant){
+  for(size_t i = 0; i < cant; i++){
+    free(array[i]);
+  }
+  free(array);
+
+}
 
 
 bool escribir_archivo(char** array, size_t n, char* output){
@@ -148,6 +155,6 @@ int main(int argc, char *argv[]){
       fprintf (stderr,"Error al escribir el archivo de output.\n");
       return 1;
     }
-    free(array_lineas);
+    liberar_arreglo(array_lineas, cant_lineas);
     return 0;
 }
