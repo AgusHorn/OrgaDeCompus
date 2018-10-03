@@ -37,7 +37,7 @@ void print_version(){
   printf("Imprimo la version.\n");
 }
 
-size_t contar_lineas(char* input){
+/*size_t contar_lineas(char* input){
   FILE* archivo = fopen(input,"r");
 	if(!archivo){
     fprintf (stderr,"Error al tratar de abrir archivo.\n");
@@ -108,7 +108,7 @@ bool escribir_archivo(char** array, size_t n, char* output){
     fputs(array[i],archivo);
   }
   return true;
-}
+}*/
 
 
 int main(int argc, char *argv[]){
@@ -144,7 +144,7 @@ int main(int argc, char *argv[]){
       }
     }
 
-    size_t cant_lineas = contar_lineas(argv[argc-1]);
+    /*size_t cant_lineas = contar_lineas(argv[argc-1]);
     char** array_lineas = cargar_archivo(argv[argc-1],cant_lineas);
     if(!array_lineas){
       //TODO:mensaje de error
@@ -153,13 +153,21 @@ int main(int argc, char *argv[]){
     int n = 0;
     if(numeric){
       n = 1;
+    }*/
+    //qsort2(&array_lineas[0],&array_lineas[cant_lineas-1],n);
+    char* hola[5] = {"a","c","d","b","e"};//ejemplito
+    qsort2(&hola[0],&hola[4],0);
+    int i;
+    for(i=0;i<5;i++){
+      printf("HOLA!\n");
+      printf("%s",hola[i]);
     }
-    qsort2(&array_lineas[0],&array_lineas[cant_lineas-1],n);
-    bool escribio = escribir_archivo(array_lineas, cant_lineas,output);
+    printf("\n");
+    /*bool escribio = escribir_archivo(array_lineas, cant_lineas,output);
     if(!escribio){
       fprintf (stderr,"Error al escribir el archivo de output.\n");
       return 1;
     }
-    liberar_arreglo(array_lineas, cant_lineas);
+    liberar_arreglo(array_lineas, cant_lineas);*/
     return 0;
 }

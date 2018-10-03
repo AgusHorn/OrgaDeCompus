@@ -29,7 +29,7 @@ Como ejecutar el emulador y el programa en el:
 
 	y nos pide la pass que es "orga6620"
 
-+ Ahora tenemos una terminal(3) de linux si aparece algo como "Terminal type?" escribir "vt100" (por lo menos en mi caso era ese el tipo, sino fijarse en la terminal(1) que dice el Terminal type.
++ Ahora tenemos una terminal(3) de linux si aparece algo como "Terminal type?" escribir "vt100" (por lo menos en mi caso era ese el tipo, sino fijarse en la terminal(1) que dice el Terminal type).
 
 + Copiamos el tp a NETBSD para eso en otra terminal(4) nueva de linux hacemos por ejemplo:
 

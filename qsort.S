@@ -15,7 +15,7 @@
 .align 2
 
         .globl qsort2
-qsort2:  .ent qsort2
+qsort2: .ent qsort2
         .frame  $29, SS, $31
         .set noreorder
         .cpload $25
@@ -24,7 +24,7 @@ qsort2:  .ent qsort2
         #prologo
         subu sp, sp, SS
         .cprestore 32
-        #sw ra, offset_ra(sp)
+        sw ra, offset_ra(sp)
         sw $fp, offset_fp(sp)
         #sw gp, offset_gp(sp)
 
@@ -36,13 +36,8 @@ qsort2:  .ent qsort2
         sw a1, offset_a1(sp)
         sw a2, offset_a2(sp)
 
-        #move t0, a0       #t0 = char** izquierdo
-        #move t1, a1       #t1 = cahr** derecho
-
-        #move t2, a2       #t2 = num (si no es cero se ordena numericamente)
-
         bge a0, a1, fin   # si izq >= der termine de ordenar.
-
+        nop
         jal pivotear      #pivotear(izq,der,num) que estan en a0,a1 y a2 respectivamente
 
         #en v0 vuelve la direccion del pivote
@@ -61,11 +56,11 @@ qsort2:  .ent qsort2
         jal qsort                  #qsort(pivot+1, der, num)
 
         jal fin           #creo que no es necesario
-        .end qsort2
+
 
 fin:
         #epilogo
-        #lw ra, offset_ra(sp)
+        lw ra, offset_ra(sp)
         lw $fp, offset_fp(sp)
         #lw gp, offset_gp(sp)
 
@@ -74,20 +69,21 @@ fin:
 
         addi sp, sp, SS
         jr ra
-
+        .end qsort2
 
 pivotear: .ent pivotear
           .frame  $29, SS, $31
           .set noreorder
+          nop
           .cpload $25
           .set noreorder
 
-          #prologo
+        #prologo
 
         subu sp, sp, SS
         .cprestore 32
 
-        #sw ra, offset_ra(sp)
+        sw ra, offset_ra(sp)
         sw $fp, offset_fp(sp)
         #sw gp, offset_gp(sp)
 
@@ -139,7 +135,7 @@ swap:   lw t6, 0(a0)
 
 fin_piv:
         #epilogo
-        #lw ra, offset_ra(sp)
+        lw ra, offset_ra(sp)
         lw $fp, offset_fp(sp)
         #lw gp, offset_gp(sp)
 
