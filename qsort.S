@@ -31,8 +31,8 @@
         .align 2
 
         .globl qsort2
-        .ent qsort2
-qsort2:
+
+qsort2: .ent qsort2
         .set noreorder
         .cpload $25
         .set noreorder
@@ -49,7 +49,7 @@ qsort2:
         sw a1, offset_a1(sp)
         sw a2, offset_a2(sp)
 
-        bge a0, a1, fin   # si izq >= der termine de ordenar.
+        bge a1, a0, fin   # si izq >= der termine de ordenar.
         nop
         jal pivotear      #pivotear(izq,der,num) que estan en a0,a1 y a2 respectivamente
 
@@ -60,13 +60,13 @@ qsort2:
 
         lw a0, SS(sp)       #a0 = izquierdo
         move a1, t3
-        subu a1, a1, 1    #a1 = pivot - 1
-        jal qsort         #qsort(izq,pivot-1,num)
+        subu a1, a1, 4    #a1 = pivot - 1
+        jal qsort2         #qsort(izq,pivot-1,num)
 
-        lw a0, 16(sp)              #a0 = pivot
-        addi a0, a0, 1            #a0 += 1
+        lw a0, SS(sp)              #a0 = pivot
+        addi a0, a0, 4            #a0 += 1
         lw a1, offset_a1(sp)       #a1 = derecho
-        jal qsort                  #qsort(pivot+1, der, num)
+        jal qsort2                  #qsort(pivot+1, der, num)
 
 fin:
         #epilogo qsort2
@@ -81,8 +81,7 @@ fin:
 
 
 
-pivotear: .ent pivotear
-          .set noreorder
+pivotear: .set noreorder
           nop
           .cpload $25
           .set noreorder
@@ -120,35 +119,30 @@ loop:   add t5,s2 ,t4           #t5 = izq + i
         beq t5, s3, fin_piv     #if(izq+i == der)break
         lbu s1, 0(t5)           #s1 = *(izq + i)
         bge s1, s5, cambio      # *(izq + i) >= valor_pivote swapeo
-        add t4,t4,1             # i++
+        add t4,t4,4             # i++
         b loop
 
-cambio:
+cambio: #move a0, t5             #a0 = izq + 1
+        #move a1, s0             #a1 = pivote
 
-        move a0, t5             #a0 = izq + 1
-        move a1, s1             #a1 = pivote
+        #swap
+        lw t6, 0(t5)
+        lw t7, 0(s0)
 
-        #guardo variables locales antes de irme a otra funcion
-        sw t4, 16(sp)
-        sw t5, 20(sp)
-        jal swap                #swap(izq+i,pivote)
+        sw t7, 0(t5)
+        sw t6, 0(s0)
 
-        #cargo varaibles locales
-        lw t4, 16(sp)
-        lw t5, 20(sp)
-        add s0,s0,1             #pivote++
+        add s0,s0,4             #pivote++
 
-        move a0, t5             #a0 = izq + 1
-        move a1, s1             #a1 = pivote
+        #move a0, t5             #a0 = izq + 1
+        #move a1, s0             #a1 = pivote
 
-        #guardo variables locales antes de saltar a otra funcion
-        sw t4, 16(sp)
-        sw t5, 20(sp)
-        jal swap                #swap(izq+i,pivote+1)
+        #swap
+        lw t6, 0(t5)
+        lw t7, 0(s0)
 
-        #cargo variables locales
-        lw t4, 16(sp)
-        lw t5, 20(sp)
+        sw t7, 0(t5)
+        sw t6, 0(s0)
 
         b loop
 
@@ -158,6 +152,8 @@ fin_piv:
         lw $fp, of_fp_pivotear(sp)
         lw gp, of_gp_pivotear(sp)
 
+        move v0, s0
+
         lw s0, 36(sp)
         lw s1, 40(sp)
         lw s2, 44(sp)
@@ -165,46 +161,49 @@ fin_piv:
         lw s4, 52(sp)
         lw s5, 56(sp)
 
+
         addi sp, sp, SS_pivotear
         jr ra
 
         .end pivotear
 
 
-
-
-swap:   .ent swap
-          .set noreorder
-          nop
-          .cpload $25
-          .set noreorder
+#swap:   #.set noreorder
+        #nop
+        #.cpload $25
+        #.set noreorder
 
         #prologo swap
 
-        subu sp, sp, SS_swap
-        .cprestore of_gp_swap
+        #subu sp, sp, SS_swap
+        #.cprestore of_gp_swap
 
-        sw $fp, of_fp_swap(sp)
+        #sw $fp, of_fp_swap(sp)
         #sw gp, of_gp_swap(sp)
 
 
         #guardamos parametros en el ABA
-        sw a0, SS_swap(sp)
-        sw a1, of_a1_swap(sp)
+        #sw a0, SS_swap(sp)
+        #sw a1, of_a1_swap(sp)
 
 
-        lw t6, 0(a0)
-        lw t7, 0(a1)
+        #lw t6, 0(a0)
+        #lw t7, 0(a1)
 
-        sw t7, 0(a0)
-        sw t6, 0(a1)
+        #sw t7, 0(a0)
+        #sw t6, 0(a1)
 
+        #lw t6, 0(t5)
+        lw t7, 0(s1)
+
+        #sw t7, 0(t5)
+        #sw t6, 0(s1)
 
         #epilogo swap
-        lw $fp, of_fp_swap(sp)
-        lw gp, of_gp_swap(sp)
+        #lw $fp, of_fp_swap(sp)
+        #lw gp, of_gp_swap(sp)
 
-        addi sp, sp, SS
-        jr ra
+        #addi sp, sp, SS
+        #jr ra
 
-        .end swap
+        #.end swap

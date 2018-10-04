@@ -159,7 +159,6 @@ int main(int argc, char *argv[]){
     qsort2(&hola[0],&hola[4],0);
     int i;
     for(i=0;i<5;i++){
-      printf("HOLA!\n");
       printf("%s",hola[i]);
     }
     printf("\n");
