@@ -45,13 +45,3 @@ void qsort2(char** izq, char** der, int num){
   qsort2(pivot+1,der,num);
 
 }
-
-/*int main(){
-  char* hola[5] = {"a","c","d","b","e"};//ejemplito
-  qsort(&hola[0],&hola[4],0);
-  for(int i=0;i<5;i++){
-    printf("%s",hola[i]);
-  }
-  printf("\n");
-  return 0;
-}*/

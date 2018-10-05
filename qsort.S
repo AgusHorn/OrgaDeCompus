@@ -49,7 +49,7 @@ qsort2: .ent qsort2
         sw a1, offset_a1(sp)
         sw a2, offset_a2(sp)
 
-        bge a1, a0, fin   # si izq >= der termine de ordenar.
+        bge a0, a1, fin   # si izq >= der termine de ordenar.
         nop
         jal pivotear      #pivotear(izq,der,num) que estan en a0,a1 y a2 respectivamente
 
@@ -114,11 +114,13 @@ pivotear: .set noreorder
         lbu s5, 0(s2)           #s5 = *izq (valor_pivote)
         move s0, s2             #s0 = izq (pivote)
         move t4, zero           #t4 = 0 (i)
+        add t4,t4,4
+
 
 loop:   add t5,s2 ,t4           #t5 = izq + i
-        beq t5, s3, fin_piv     #if(izq+i == der)break
+        bgt t5, s3, fin_piv     #if(izq+i >= der)break
         lbu s1, 0(t5)           #s1 = *(izq + i)
-        bge s1, s5, cambio      # *(izq + i) >= valor_pivote swapeo
+        bgt s5, s1, cambio      # *(izq + i) <= valor_pivote swapeo
         add t4,t4,4             # i++
         b loop
 
