@@ -166,6 +166,12 @@ int main(int argc, char *argv[]){
       n = 1;
     }
     qsort2(&array_lineas[0],&array_lineas[cant_lineas-1],n);
+    /*char* hola[6] = {"a","c","e","b","d","g"};//ejemplito
+    qsort2(&hola[0],&hola[5],0);
+    int i;
+    for(i=0;i<6;i++){
+      printf("%s\n",hola[i]);
+    }*/
     bool escribio = escribir_archivo(array_lineas, cant_lineas,output);
     if(!escribio){
       fprintf (stderr,"Error al escribir el archivo de output.\n");

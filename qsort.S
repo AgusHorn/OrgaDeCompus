@@ -111,21 +111,31 @@ pivotear: .set noreorder
         move s3, a1             #s3 = der
         move s4, a2             #s4 = num
 
-        lbu s5, 0(s2)           #s5 = *izq (valor_pivote)
+        lw t3, 0(s2)            #aca es char*
+        lw s5, 0(t3)            #s5 = *izq (valor_pivote) aca es char TODO: Comparacion entre cadenas de mas de un caracter
         move s0, s2             #s0 = izq (pivote)
         move t4, zero           #t4 = 0 (i)
         add t4,t4,4
 
 
+
+
 loop:   add t5,s2 ,t4           #t5 = izq + i
         bgt t5, s3, fin_piv     #if(izq+i >= der)break
-        lbu s1, 0(t5)           #s1 = *(izq + i)
+        lw t2, 0(t5)
+        lw s1, 0(t2)            #s1 = *(izq + i)
+
+
+        #lw s1, 0(t5)           #s1 = *(izq + i)
+
         bgt s5, s1, cambio      # *(izq + i) <= valor_pivote swapeo
         add t4,t4,4             # i++
         b loop
 
 cambio: #move a0, t5             #a0 = izq + 1
         #move a1, s0             #a1 = pivote
+
+        #jal swap
 
         #swap
         lw t6, 0(t5)
@@ -138,6 +148,8 @@ cambio: #move a0, t5             #a0 = izq + 1
 
         #move a0, t5             #a0 = izq + 1
         #move a1, s0             #a1 = pivote
+
+        #jal swap
 
         #swap
         lw t6, 0(t5)
@@ -167,10 +179,9 @@ fin_piv:
         addi sp, sp, SS_pivotear
         jr ra
 
-        .end pivotear
 
-
-#swap:   #.set noreorder
+#swap:   .ent swap
+        #.set noreorder
         #nop
         #.cpload $25
         #.set noreorder
@@ -194,12 +205,6 @@ fin_piv:
 
         #sw t7, 0(a0)
         #sw t6, 0(a1)
-
-        #lw t6, 0(t5)
-        lw t7, 0(s1)
-
-        #sw t7, 0(t5)
-        #sw t6, 0(s1)
 
         #epilogo swap
         #lw $fp, of_fp_swap(sp)
