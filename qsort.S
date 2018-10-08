@@ -235,20 +235,21 @@ atoi:   .ent atoi
         subu sp, sp, of_atoi      #dejamos espacio en el stack para:
         .cprestore of_gp_atoi
         sw $fp, of_fp_atoi(sp)    #guardar fp
-        sw gp, of_gp_atoi(sp)     #guardar gp
+        #sw gp, of_gp_atoi(sp)     #guardar gp
 
         li v0, 0
         move t0, a0               #muevo (char* letra) a t0
 
 loop_atoi: lbu t1, 0(t0)          # t1 = *letra
            beq zero, t1, fin_atoi #if (letra == 0) -> fin_atoi
-           sub t2, t1, '0'
+           sub t2, t1, 48
            mul v0, v0, 10
            add v0, v0, t2
+           add t0, t0, 1
            b loop_atoi
-           add t0, v0, t2
+           nop
 
-fin_atoi:  lw $fp, of_fp_swap(sp)
+fin_atoi:  lw $fp, of_fp_atoi(sp)
            lw gp, of_gp_atoi(sp)
            jr ra
            addi sp, sp, of_atoi
