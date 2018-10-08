@@ -155,7 +155,7 @@ int main(int argc, char *argv[]){
         return 1;
       }
     }
-    size_t cant_lineas = contar_lineas(argv[argc-1]);
+    /*size_t cant_lineas = contar_lineas(argv[argc-1]);
     char** array_lineas = cargar_archivo(argv[argc-1],cant_lineas);
     if(!array_lineas){
       //TODO:mensaje de error
@@ -165,18 +165,18 @@ int main(int argc, char *argv[]){
     if(numeric){
       n = 1;
     }
-    qsort2(&array_lineas[0],&array_lineas[cant_lineas-1],n);
-    /*char* hola[6] = {"a","c","e","b","d","g"};//ejemplito
+    qsort2(&array_lineas[0],&array_lineas[cant_lineas-1],n);*/
+    char* hola[6] = {"ab","ac","ae","ab","ad","ag"};//ejemplito
     qsort2(&hola[0],&hola[5],0);
     int i;
     for(i=0;i<6;i++){
       printf("%s\n",hola[i]);
-    }*/
-    bool escribio = escribir_archivo(array_lineas, cant_lineas,output);
+    }
+    /*bool escribio = escribir_archivo(array_lineas, cant_lineas,output);
     if(!escribio){
       fprintf (stderr,"Error al escribir el archivo de output.\n");
       return 1;
     }
-    liberar_arreglo(array_lineas, cant_lineas);
+    liberar_arreglo(array_lineas, cant_lineas);*/
     return 0;
 }
