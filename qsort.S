@@ -23,6 +23,12 @@
 #define of_gp_swap 0
 #define of_a1_swap 12
 
+#CONSTANTES DE LA FUNCION ATOI
+#define of_atoi 8
+#define of_fp_atoi 4
+#define of_gp_atoi 0
+
+
 #CONSTANTES DE LA FUNCION STRCMP
 #define SS_strcmp 32
 #define of_gp_strcmp 0
@@ -35,167 +41,59 @@
         .align 2
 
         .globl qsort2
-#------------------------------------------------------------------------------------------------------------------------------
-#                                       FUNCION STRCMP
-#------------------------------------------------------------------------------------------------------------------------------
-
-#Parametros a0 posicion inicial de cadena 1, a1 posicion inicial de cadena 2
-
-strcmp:
-      .ent strcmp
-      .frame $fp, SS_strcmp, ra
-      .set noreorder
-      nop
-      .cpload $25
-      .set noreorder
-
-      #prologo strcmp
-      subu sp, sp, SS_strcmp
-      .cprestore of_gp_strcmp
-
-      sw $fp, of_fp_strcmp(sp)
-      #sw gp, of_gp_strcmp(sp)
-
-      sw s0, 8(sp)
-      sw s1, 12(sp)
-      sw s2, 16(sp)
-      sw s3, 20(sp)
-      sw s4, 24(sp)
-
-      move $fp, sp
-
-
-      #guardamos parametros en el ABA
-      sw a0, SS_strcmp(sp)
-      sw a1, of_a1_strcmp(sp)
-
-
-      move s0, a0       # puntero a cadena 1 en i
-      move s1, a1       # puntero a cadena 2 en i
-      #move t0, zero     # i=0 indice
-
-      move s4, zero     # return value c>0 si cadena1>cadena2, c<0 si cadena2>=cadena1
-
-
-
-loop_cmp:
-
-      lbu s2, 0(s0)   #cadena1[i]
-      lbu s3, 0(s1)   #cadena2[i]
-
-      beq zero, s2, mayor_cadena2 #son iguales pero la cadena 2 es mas larga que la cadena 1
-      nop
-      beq zero, s3, mayor_cadena1 #son iguales pero la cadena 1 es mas larga que la cadena 2
-      nop
-
-      sub s4, s2, s3
-
-      bnez s4, fin_cmp
-      nop
-
-      add s0, s0, 1 #avanzamos la cadena1
-      add s1, s1, 1 #avanzamos la cadena2
-
-      b loop_cmp
-
-fin_cmp:
-      move v0, s4
-
-      #epilogo
-      lw $fp, of_fp_strcmp(sp)
-      lw gp, of_gp_strcmp(sp)
-
-      lw s0, 8(sp)
-      lw s1, 12(sp)
-      lw s2, 16(sp)
-      lw s3, 20(sp)
-      lw s4, 24(sp)
-
-      addi sp, sp, SS_strcmp
-      jr ra
-
-mayor_cadena1:
-      li s4, 1
-      b fin_cmp
-
-mayor_cadena2:
-      li s4, -1
-      b fin_cmp
-
-      .end strcmp
 
 #------------------------------------------------------------------------------------------------------------------------------
-#                                       FUNCION ATOI
+#                                       FUNCION QSORT2
 #------------------------------------------------------------------------------------------------------------------------------
-atoi:   .ent atoi
+
+qsort2: .ent qsort2
+        .frame $fp, SS, ra
         .set noreorder
         .cpload $25
-        .set reorder
+        .set noreorder
 
-        #prologo atoi
-        subu sp, sp, of_atoi      #dejamos espacio en el stack para:
-        .cprestore of_gp_atoi
-        sw $fp, of_fp_atoi(sp)    #guardar fp
-        sw gp, of_gp_atoi(sp)     #guardar gp
+        #prologo qsort2
+        subu sp, sp, SS
+        .cprestore offset_gp
+        sw ra, offset_ra(sp)
+        sw $fp, offset_fp(sp)
+        #sw gp, offset_gp(sp)
 
-        li $v0, 0
-        move t0, a0               #muevo (char* letra) a t0
+        move $fp, sp
 
-loop_atoi: lbu t1, 0(t0)          # t1 = *letra
-           beq zero, t1, fin_atoi #if (letra == 0) -> fin_atoi
-           sub t2, t1, '0'
-           mul v0, v0, 10
-           add v0, v0, t2
-           jmp loop_atoi
-           addi t0, v0, t2
+        #guardamos parametros en el ABA
+        sw a0, SS(sp)
+        sw a1, offset_a1(sp)
+        sw a2, offset_a2(sp)
 
-fin_atoi:  lw $fp, 8(sp)
-           lw gp, 4(sp)
-           jr ra
-           addi sp, sp, 8
-       	   .end atoi
+        bge a0, a1, fin   # si izq >= der termine de ordenar.
+        nop
+        jal pivotear      #pivotear(izq,der,num) que estan en a0,a1 y a2 respectivamente
 
-#------------------------------------------------------------------------------------------------------------------------------
-#                                       FUNCION SWAP
-#------------------------------------------------------------------------------------------------------------------------------
+        #en v0 vuelve la direccion del pivote
 
-swap: .ent swap
-      .frame $fp, SS_swap, ra
-      .set noreorder
-      nop
-      .cpload $25
-      .set noreorder
+        move t3, v0
+        sw t3, 16(sp)		  #guardo el pivote en t3 en el LTA
 
-      #prologo swap
+        lw a0, SS(sp)       #a0 = izquierdo
+        move a1, t3
+        subu a1, a1, 4    #a1 = pivot - 1
+        jal qsort2         #qsort(izq,pivot-1,num)
 
-      subu sp, sp, SS_swap
-      .cprestore of_gp_swap
+        lw a0, SS(sp)              #a0 = pivot
+        addi a0, a0, 4            #a0 += 1
+        lw a1, offset_a1(sp)       #a1 = derecho
+        jal qsort2                  #qsort(pivot+1, der, num)
 
-      sw $fp, of_fp_swap(sp)
-      #sw gp, of_gp_swap(sp)
+fin:
+        #epilogo qsort2
+        lw ra, offset_ra(sp)
+        lw $fp, offset_fp(sp)
+        lw gp, offset_gp(sp)
 
-      move $fp, sp
-
-
-      #guardamos parametros en el ABA
-      sw a0, SS_swap(sp)
-      sw a1, of_a1_swap(sp)
-
-
-      lw t6, 0(a0)
-      lw t7, 0(a1)
-
-      sw t7, 0(a0)
-      sw t6, 0(a1)
-
-      #epilogo swap
-      lw $fp, of_fp_swap(sp)
-      lw gp, of_gp_swap(sp)
-
-      addi sp, sp, SS_swap
-      jr ra
-
-      .end swap
+        addi sp, sp, SS
+        jr ra
+        .end qsort2
 
 #------------------------------------------------------------------------------------------------------------------------------
 #                                       FUNCION PIVOTEAR
@@ -325,56 +223,166 @@ fin_piv:
         jr ra
         .end pivotear
 
-
 #------------------------------------------------------------------------------------------------------------------------------
-#                                       FUNCION QSORT2
+#                                       FUNCION ATOI
 #------------------------------------------------------------------------------------------------------------------------------
-
-qsort2: .ent qsort2
-        .frame $fp, SS, ra
+atoi:   .ent atoi
         .set noreorder
         .cpload $25
-        .set noreorder
+        .set reorder
 
-        #prologo qsort2
-        subu sp, sp, SS
-        .cprestore offset_gp
-        sw ra, offset_ra(sp)
-        sw $fp, offset_fp(sp)
-        #sw gp, offset_gp(sp)
+        #prologo atoi
+        subu sp, sp, of_atoi      #dejamos espacio en el stack para:
+        .cprestore of_gp_atoi
+        sw $fp, of_fp_atoi(sp)    #guardar fp
+        sw gp, of_gp_atoi(sp)     #guardar gp
 
-        move $fp, sp
+        li v0, 0
+        move t0, a0               #muevo (char* letra) a t0
 
-        #guardamos parametros en el ABA
-        sw a0, SS(sp)
-        sw a1, offset_a1(sp)
-        sw a2, offset_a2(sp)
+loop_atoi: lbu t1, 0(t0)          # t1 = *letra
+           beq zero, t1, fin_atoi #if (letra == 0) -> fin_atoi
+           sub t2, t1, '0'
+           mul v0, v0, 10
+           add v0, v0, t2
+           b loop_atoi
+           add t0, v0, t2
 
-        bge a0, a1, fin   # si izq >= der termine de ordenar.
-        nop
-        jal pivotear      #pivotear(izq,der,num) que estan en a0,a1 y a2 respectivamente
+fin_atoi:  lw $fp, of_fp_swap(sp)
+           lw gp, of_gp_atoi(sp)
+           jr ra
+           addi sp, sp, of_atoi
+       	   .end atoi
 
-        #en v0 vuelve la direccion del pivote
 
-        move t3, v0
-        sw t3, 16(sp)		  #guardo el pivote en t3 en el LTA
+#------------------------------------------------------------------------------------------------------------------------------
+#                                       FUNCION STRCMP
+#------------------------------------------------------------------------------------------------------------------------------
 
-        lw a0, SS(sp)       #a0 = izquierdo
-        move a1, t3
-        subu a1, a1, 4    #a1 = pivot - 1
-        jal qsort2         #qsort(izq,pivot-1,num)
+#Parametros a0 posicion inicial de cadena 1, a1 posicion inicial de cadena 2
 
-        lw a0, SS(sp)              #a0 = pivot
-        addi a0, a0, 4            #a0 += 1
-        lw a1, offset_a1(sp)       #a1 = derecho
-        jal qsort2                  #qsort(pivot+1, der, num)
+strcmp:
+      .ent strcmp
+      .frame $fp, SS_strcmp, ra
+      .set noreorder
+      nop
+      .cpload $25
+      .set noreorder
 
-fin:
-        #epilogo qsort2
-        lw ra, offset_ra(sp)
-        lw $fp, offset_fp(sp)
-        lw gp, offset_gp(sp)
+      #prologo strcmp
+      subu sp, sp, SS_strcmp
+      .cprestore of_gp_strcmp
 
-        addi sp, sp, SS
-        jr ra
-        .end qsort2
+      sw $fp, of_fp_strcmp(sp)
+      #sw gp, of_gp_strcmp(sp)
+
+      sw s0, 8(sp)
+      sw s1, 12(sp)
+      sw s2, 16(sp)
+      sw s3, 20(sp)
+      sw s4, 24(sp)
+
+      move $fp, sp
+
+
+      #guardamos parametros en el ABA
+      sw a0, SS_strcmp(sp)
+      sw a1, of_a1_strcmp(sp)
+
+
+      move s0, a0       # puntero a cadena 1 en i
+      move s1, a1       # puntero a cadena 2 en i
+      #move t0, zero     # i=0 indice
+
+      move s4, zero     # return value c>0 si cadena1>cadena2, c<0 si cadena2>=cadena1
+
+
+
+loop_cmp:
+
+      lbu s2, 0(s0)   #cadena1[i]
+      lbu s3, 0(s1)   #cadena2[i]
+
+      beq zero, s2, mayor_cadena2 #son iguales pero la cadena 2 es mas larga que la cadena 1
+      nop
+      beq zero, s3, mayor_cadena1 #son iguales pero la cadena 1 es mas larga que la cadena 2
+      nop
+
+      sub s4, s2, s3
+
+      bnez s4, fin_cmp
+      nop
+
+      add s0, s0, 1 #avanzamos la cadena1
+      add s1, s1, 1 #avanzamos la cadena2
+
+      b loop_cmp
+
+fin_cmp:
+      move v0, s4
+
+      #epilogo
+      lw $fp, of_fp_strcmp(sp)
+      lw gp, of_gp_strcmp(sp)
+
+      lw s0, 8(sp)
+      lw s1, 12(sp)
+      lw s2, 16(sp)
+      lw s3, 20(sp)
+      lw s4, 24(sp)
+
+      addi sp, sp, SS_strcmp
+      jr ra
+
+mayor_cadena1:
+      li s4, 1
+      b fin_cmp
+
+mayor_cadena2:
+      li s4, -1
+      b fin_cmp
+
+      .end strcmp
+
+
+#------------------------------------------------------------------------------------------------------------------------------
+#                                       FUNCION SWAP
+#------------------------------------------------------------------------------------------------------------------------------
+
+swap: .ent swap
+      .frame $fp, SS_swap, ra
+      .set noreorder
+      nop
+      .cpload $25
+      .set noreorder
+
+      #prologo swap
+
+      subu sp, sp, SS_swap
+      .cprestore of_gp_swap
+
+      sw $fp, of_fp_swap(sp)
+      #sw gp, of_gp_swap(sp)
+
+      move $fp, sp
+
+
+      #guardamos parametros en el ABA
+      sw a0, SS_swap(sp)
+      sw a1, of_a1_swap(sp)
+
+
+      lw t6, 0(a0)
+      lw t7, 0(a1)
+
+      sw t7, 0(a0)
+      sw t6, 0(a1)
+
+      #epilogo swap
+      lw $fp, of_fp_swap(sp)
+      lw gp, of_gp_swap(sp)
+
+      addi sp, sp, SS_swap
+      jr ra
+
+      .end swap
