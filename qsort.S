@@ -125,6 +125,37 @@ mayor_cadena2:
       .end strcmp
 
 #------------------------------------------------------------------------------------------------------------------------------
+#                                       FUNCION ATOI
+#------------------------------------------------------------------------------------------------------------------------------
+atoi:   .ent atoi
+        .set noreorder
+        .cpload $25
+        .set reorder
+
+        #prologo atoi
+        subu sp, sp, of_atoi      #dejamos espacio en el stack para:
+        .cprestore of_gp_atoi
+        sw $fp, of_fp_atoi(sp)    #guardar fp
+        sw gp, of_gp_atoi(sp)     #guardar gp
+
+        li $v0, 0
+        move t0, a0               #muevo (char* letra) a t0
+
+loop_atoi: lbu t1, 0(t0)          # t1 = *letra
+           beq zero, t1, fin_atoi #if (letra == 0) -> fin_atoi
+           sub t2, t1, '0'
+           mul v0, v0, 10
+           add v0, v0, t2
+           jmp loop_atoi
+           addi t0, v0, t2
+
+fin_atoi:  lw $fp, 8(sp)
+           lw gp, 4(sp)
+           jr ra
+           addi sp, sp, 8
+       	   .end atoi
+
+#------------------------------------------------------------------------------------------------------------------------------
 #                                       FUNCION SWAP
 #------------------------------------------------------------------------------------------------------------------------------
 
@@ -218,19 +249,29 @@ loop:   add t5,s2 ,t4           #t5 = izq + i
         nop
         #lw t2, 0(t5)
         #lw s1, 0(t2)            #s1 = *(izq + i)
-
-
         #lw s1, 0(t5)           #s1 = *(izq + i)
 
         lw a0, 0(t5)           #a0 = izq + 1
         lw a1, 0(s0)           #a1 = pivote
 
+        bne s4, zero, pre_atoi #if (num != 0) -> pre_atoi
+        nop
         jal strcmp
         nop
-        bgt zero, v0, cambio      # *(izq + i) <= valor_pivote swapeo
+        bgt zero, v0, cambio      # if(*(izq + i) <= valor_pivote ) -> swapeo
         nop
+
         add t4,t4,4             # i++
         b loop
+
+pre_atoi: move a0, t2           # a0 = *(izq +i)
+          jal atoi
+          move t5, v0           #guardo el valor de atoi en t5
+          move a0, s5           # a0 = valor_pivote
+          jal atoi
+          move s0, v0           #guardo el valor de atoi en s0
+
+          bgt t5,s0,cambio   #if (a<b) ->swapeo
 
 cambio: #move a0, t5             #a0 = izq + 1
         #move a1, s0             #a1 = pivote
