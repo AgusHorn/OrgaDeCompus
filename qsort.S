@@ -133,8 +133,7 @@ pivotear: .ent pivotear
         move s3, a1             #s3 = der
         move s4, a2             #s4 = num
 
-        #lw t3, 0(s2)            #aca es char*
-        #lw s5, 0(t3)            #s5 = *izq (valor_pivote) aca es char TODO: Comparacion entre cadenas de mas de un caracter
+        lw s5, 0(s2)            #s5 = *izq (valor_pivote)
         move s0, s2             #s0 = izq (pivote)
         move t4, zero           #t4 = 0 (i)
         add t4,t4,4
@@ -145,31 +144,30 @@ pivotear: .ent pivotear
 loop:   add t5,s2 ,t4           #t5 = izq + i
         bgt t5, s3, fin_piv     #if(izq+i >= der)break
         nop
-        #lw t2, 0(t5)
-        #lw s1, 0(t2)            #s1 = *(izq + i)
-        #lw s1, 0(t5)           #s1 = *(izq + i)
-
-        lw a0, 0(t5)           #a0 = izq + 1
-        lw a1, 0(s0)           #a1 = pivote
 
         bne s4, zero, pre_atoi #if (num != 0) -> pre_atoi
         nop
+
+        #Parametros para strcmp(char* cadena1, char* cadena2)
+        lw a0, 0(t5)           #a0 = izq + 1
+        move a1, s5            #a1 = valor_pivote
         jal strcmp
         nop
+
         bgt zero, v0, cambio      # if(*(izq + i) <= valor_pivote ) -> swapeo
         nop
 
         add t4,t4,4             # i++
         b loop
 
-pre_atoi: move a0, t2           # a0 = *(izq +i)
+pre_atoi: lw a0, 0(t5)           # a0 = *(izq +i)
           jal atoi
-          move t5, v0           #guardo el valor de atoi en t5
-          move a0, s5           # a0 = valor_pivote
+          move t1, v0            #guardo el valor de atoi en t5
+          move a0, s5            # a0 = valor_pivote
           jal atoi
-          move s0, v0           #guardo el valor de atoi en s0
+          move s0, v0            #guardo el valor de atoi en s0
 
-          bgt t5,s0,cambio   #if (a<b) ->swapeo
+          bgt s0,t1,loop         #if (a>b) ->loop sino swapeo(cambio)
 
 cambio: #move a0, t5             #a0 = izq + 1
         #move a1, s0             #a1 = pivote
@@ -227,21 +225,24 @@ fin_piv:
 #                                       FUNCION ATOI
 #------------------------------------------------------------------------------------------------------------------------------
 atoi:   .ent atoi
+        .frame $fp, of_atoi, ra
         .set noreorder
         .cpload $25
         .set reorder
 
         #prologo atoi
-        subu sp, sp, of_atoi      #dejamos espacio en el stack para:
+        subu sp, sp, of_atoi        #dejamos espacio en el stack para:
         .cprestore of_gp_atoi
-        sw $fp, of_fp_atoi(sp)    #guardar fp
-        #sw gp, of_gp_atoi(sp)     #guardar gp
+        sw $fp, of_fp_atoi(sp)      #guardar fp
+        #sw gp, of_gp_atoi(sp)      #guardar gp
+
+        move $fp, sp
 
         li v0, 0
-        move t0, a0               #muevo (char* letra) a t0
+        move t0, a0                 #muevo (char* letra) a t0
 
-loop_atoi: lbu t1, 0(t0)          # t1 = *letra
-           beq zero, t1, fin_atoi #if (letra == 0) -> fin_atoi
+loop_atoi: lbu t1, 0(t0)            # t1 = *letra
+           beq zero, t1, fin_atoi   #if (letra == 0) -> fin_atoi
            sub t2, t1, 48
            mul v0, v0, 10
            add v0, v0, t2
@@ -292,7 +293,6 @@ strcmp:
 
       move s0, a0       # puntero a cadena 1 en i
       move s1, a1       # puntero a cadena 2 en i
-      #move t0, zero     # i=0 indice
 
       move s4, zero     # return value c>0 si cadena1>cadena2, c<0 si cadena2>=cadena1
 
@@ -319,7 +319,7 @@ loop_cmp:
       b loop_cmp
 
 fin_cmp:
-      move v0, s4
+      move v0, s4 #devuelvo positivo o negativo segun sea correspondiente
 
       #epilogo
       lw $fp, of_fp_strcmp(sp)
@@ -335,11 +335,11 @@ fin_cmp:
       jr ra
 
 mayor_cadena1:
-      li s4, 1
+      li s4, 1 #lo seteo positivo
       b fin_cmp
 
 mayor_cadena2:
-      li s4, -1
+      li s4, -1 #lo seteo negativo
       b fin_cmp
 
       .end strcmp
