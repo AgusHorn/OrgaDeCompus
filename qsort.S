@@ -12,9 +12,9 @@
 
 #CONSTANTES DE LA FUNCION PIVOTEAR
 #define SS_pivotear 64
-#define of_ra_pivotear 32
-#define of_fp_pivotear 28
-#define of_gp_pivotear 24
+#define of_ra_pivotear 56
+#define of_fp_pivotear 52
+#define of_gp_pivotear 48
 
 
 #CONSTANTES DE LA FUNCION SWAP
@@ -31,8 +31,8 @@
 
 #CONSTANTES DE LA FUNCION STRCMP
 #define SS_strcmp 32
-#define of_gp_strcmp 0
-#define of_fp_strcmp 4
+#define of_gp_strcmp 20
+#define of_fp_strcmp 24
 #define of_a1_strcmp 36
 
 #COMIENZA EL CODIGO
@@ -117,12 +117,12 @@ pivotear: .ent pivotear
 
         move $fp, sp
 
-        sw s0, 36(sp)
-        sw s1, 40(sp)
-        sw s2, 44(sp)
-        sw s3, 48(sp)
-        sw s4, 52(sp)
-        sw s5, 56(sp)
+        sw s0, 24(sp)
+        sw s1, 28(sp)
+        sw s2, 32(sp)
+        sw s3, 36(sp)
+        sw s4, 40(sp)
+        sw s5, 44(sp)
 
         #guardamos parametros en el ABA
         sw a0, SS(sp)
@@ -211,12 +211,12 @@ fin_piv:
 
         move v0, s0
 
-        lw s0, 36(sp)
-        lw s1, 40(sp)
-        lw s2, 44(sp)
-        lw s3, 48(sp)
-        lw s4, 52(sp)
-        lw s5, 56(sp)
+        lw s0, 24(sp)
+        lw s1, 28(sp)
+        lw s2, 32(sp)
+        lw s3, 36(sp)
+        lw s4, 40(sp)
+        lw s5, 44(sp)
 
 
         addi sp, sp, SS_pivotear
@@ -277,14 +277,13 @@ strcmp:
       sw $fp, of_fp_strcmp(sp)
       #sw gp, of_gp_strcmp(sp)
 
-      sw s0, 8(sp)
-      sw s1, 12(sp)
-      sw s2, 16(sp)
-      sw s3, 20(sp)
-      sw s4, 24(sp)
+      sw s0, 0(sp)
+      sw s1, 4(sp)
+      sw s2, 8(sp)
+      sw s3, 12(sp)
+      sw s4, 16(sp)
 
       move $fp, sp
-
 
       #guardamos parametros en el ABA
       sw a0, SS_strcmp(sp)
@@ -326,11 +325,11 @@ fin_cmp:
       lw $fp, of_fp_strcmp(sp)
       lw gp, of_gp_strcmp(sp)
 
-      lw s0, 8(sp)
-      lw s1, 12(sp)
-      lw s2, 16(sp)
-      lw s3, 20(sp)
-      lw s4, 24(sp)
+      lw s0, 0(sp)
+      lw s1, 4(sp)
+      lw s2, 8(sp)
+      lw s3, 12(sp)
+      lw s4, 16(sp)
 
       addi sp, sp, SS_strcmp
       jr ra
