@@ -16,6 +16,9 @@
 #define of_fp_pivotear 52
 #define of_gp_pivotear 48
 
+#define of_a1_pivotear 68
+#define of_a2_pivotear 72
+
 
 #CONSTANTES DE LA FUNCION SWAP
 #define SS_swap 8
@@ -125,9 +128,9 @@ pivotear: .ent pivotear
         sw s5, 44(sp)
 
         #guardamos parametros en el ABA
-        sw a0, SS(sp)
-        sw a1, offset_a1(sp)
-        sw a2, offset_a2(sp)
+        sw a0, SS_pivotear(sp)
+        sw a1, of_a1_pivotear(sp)
+        sw a2, of_a2_pivotear(sp)
 
         move s2, a0             #s2 = izq
         move s3, a1             #s3 = der
