@@ -151,11 +151,11 @@ int main(int argc, char *argv[]){
         break;
       case '?': //opcion desconocida
         if (optopt == 'o')//si no le dan parametro a la opcion de output
-          fprintf (stderr, "Option -%c requires an argument.\n", optopt);
+          fprintf (stderr, "Opcion -%c requiere un argumento.\n", optopt);
         else if (isprint (optopt))
-          fprintf (stderr, "Unknown option `-%c'.\n", optopt);
+          fprintf (stderr, "Opcion desconocida `-%c'.\n", optopt);
         else
-          fprintf (stderr,"Unknown option character `\\x%x'.\n",optopt);
+          fprintf (stderr,"Opcion caracter desconocido `\\x%x'.\n",optopt);
         return 1;
       }
     }
@@ -164,7 +164,7 @@ int main(int argc, char *argv[]){
       exit(EXIT_FAILURE);
     }
     if (optind >= argc) {
-        fprintf(stderr, "Expected argument after options\n");
+        fprintf(stderr, "Ingrese un archivo luego del parámetro.\n");
          exit(EXIT_FAILURE);
      }
     /*size_t cant_lineas = contar_lineas(argv[argc-1]);
