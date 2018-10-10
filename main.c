@@ -45,8 +45,7 @@ Examples:\n\
 }
 
 void print_version(){
-  //TODO: Nose a que se refiere con version
-  printf("Imprimo la version.\n");
+  printf("Qsort v1.0.\n");
 }
 
 size_t contar_lineas(char* input){
@@ -124,12 +123,17 @@ bool escribir_archivo(char** array, size_t n, char* output){
 
 
 int main(int argc, char *argv[]){
-
+  if (argc == 1){
+    fprintf (stderr,"Ingrese los parámetros necesarios.\n");
+    exit(EXIT_FAILURE);
+  }
   char *output = NULL;
   bool numeric = false;
+  int args = 0;
   int c;
 
   while ((c = getopt (argc, argv, "hVo:n")) != -1){
+    args++;
     switch (c){
 
       case 'h':
@@ -155,11 +159,19 @@ int main(int argc, char *argv[]){
         return 1;
       }
     }
+    if (args == 0){
+      fprintf (stderr, "Indique el parámetro previo al archivo.\n");
+      exit(EXIT_FAILURE);
+    }
+    if (optind >= argc) {
+        fprintf(stderr, "Expected argument after options\n");
+         exit(EXIT_FAILURE);
+     }
     /*size_t cant_lineas = contar_lineas(argv[argc-1]);
     char** array_lineas = cargar_archivo(argv[argc-1],cant_lineas);
     if(!array_lineas){
-      //TODO:mensaje de error
-      return 1;
+      fprintf (stderr,"Error al manipulate file.\n");
+      exit(EXIT_FAILURE);
     }
     int n = 0;
     if(numeric){
@@ -175,7 +187,8 @@ int main(int argc, char *argv[]){
     /*bool escribio = escribir_archivo(array_lineas, cant_lineas,output);
     if(!escribio){
       fprintf (stderr,"Error al escribir el archivo de output.\n");
-      return 1;
+      liberar_arreglo(array_lineas, cant_lineas);
+      exit(EXIT_FAILURE);
     }
     liberar_arreglo(array_lineas, cant_lineas);*/
     return 0;
