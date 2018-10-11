@@ -105,7 +105,6 @@ fin:
 pivotear: .ent pivotear
           .frame $fp, SS_pivotear, ra
           .set noreorder
-          nop
           .cpload $25
           .set noreorder
 
@@ -170,6 +169,7 @@ pre_atoi: lw a0, 0(t5)           # a0 = *(izq +i)
           jal atoi
           move s0, v0            #guardo el valor de atoi en s0
 
+          add t4,t4,4
           bgt s0,t1,loop         #if (a>b) ->loop sino swapeo(cambio)
 
 cambio: #move a0, t5             #a0 = izq + 1
@@ -205,12 +205,14 @@ cambio: #move a0, t5             #a0 = izq + 1
         b loop
 
 fin_piv:
+
+        move v0, s0
+
         #epilogo pivotear
         lw ra, of_ra_pivotear(sp)
         lw $fp, of_fp_pivotear(sp)
-        lw gp, of_gp_pivotear(sp)
+        #lw gp, of_gp_pivotear(sp)
 
-        move v0, s0
 
         lw s0, 24(sp)
         lw s1, 28(sp)
@@ -270,7 +272,6 @@ strcmp:
       .ent strcmp
       .frame $fp, SS_strcmp, ra
       .set noreorder
-      nop
       .cpload $25
       .set noreorder
 
@@ -355,7 +356,6 @@ mayor_cadena2:
 swap: .ent swap
       .frame $fp, SS_swap, ra
       .set noreorder
-      nop
       .cpload $25
       .set noreorder
 
