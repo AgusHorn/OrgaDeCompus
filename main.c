@@ -181,12 +181,6 @@ int main(int argc, char *argv[]){
       n = 1;
     }
     qsort2(&array_lineas[0],&array_lineas[cant_lineas-1],n);
-    /*char* hola[6] = {"1","2","10","5","4","3"};//ejemplito
-    qsort2(&hola[0],&hola[5],1);
-    int i;
-    for(i=0;i<6;i++){
-      printf("%s\n",hola[i]);
-    }*/
     if(output == NULL){
       fprintf (stderr,"Debe ingresar -o indicando el archivo de salida.\n");
       exit(EXIT_FAILURE);
