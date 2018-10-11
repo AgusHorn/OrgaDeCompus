@@ -35,10 +35,10 @@ void print_help(){
 \tqsort [options] archivo\n\
 Options:\n\
 \t-h, --help\t\
-Imprime ayuda.\n\
+ Imprime ayuda.\n\
 \t-V, --version\t Versión del programa.\n\
 \t-o, --output\t\
-Archivo de salida.\n\
+ Archivo de salida.\n\
 \t-n, --numeric\t Ordenar los datos numéricamente en vez de alfabéticamente.\n\
 Examples:\n\
 \tqsort -n -o numeros.txt\n");
@@ -48,11 +48,11 @@ void print_version(){
   printf("Qsort v1.0.\n");
 }
 
-size_t contar_lineas(char* input){
+ssize_t contar_lineas(char* input){
   FILE* archivo = fopen(input,"r");
 	if(!archivo){
     fprintf (stderr,"Error al tratar de abrir archivo.\n");
-    return 0;//fallo
+    return -1;//fallo
   }
 
   char line[256];
@@ -76,7 +76,7 @@ char** cargar_archivo(char* input, size_t cant){
   FILE* archivo = fopen(input,"r");
 	if(!archivo){
     fprintf (stderr,"Error al tratar de abrir archivo.\n");
-    return 0;//fallo
+    return NULL;//fallo
   }
 
   char line[256];
@@ -124,7 +124,7 @@ bool escribir_archivo(char** array, size_t n, char* output){
 
 
 int main(int argc, char *argv[]){
-  /*if (argc == 1){
+  if (argc == 1){
     fprintf (stderr,"Ingrese los parámetros necesarios.\n");
     exit(EXIT_FAILURE);
   }
@@ -167,7 +167,10 @@ int main(int argc, char *argv[]){
         fprintf(stderr, "Ingrese un archivo luego del parámetro.\n");
          exit(EXIT_FAILURE);
      }
-    size_t cant_lineas = contar_lineas(argv[argc-1]);
+    ssize_t cant_lineas = contar_lineas(argv[argc-1]);
+    if(cant_lineas == -1){
+      exit(EXIT_FAILURE);
+    }
     char** array_lineas = cargar_archivo(argv[argc-1],cant_lineas);
     if(!array_lineas){
       fprintf (stderr,"Error al manipular archivo.\n");
@@ -177,14 +180,14 @@ int main(int argc, char *argv[]){
     if(numeric){
       n = 1;
     }
-    qsort2(&array_lineas[0],&array_lineas[cant_lineas-1],n);*/
-    char* hola[6] = {"1","2","10","5","4","3"};//ejemplito
+    qsort2(&array_lineas[0],&array_lineas[cant_lineas-1],n);
+    /*char* hola[6] = {"1","2","10","5","4","3"};//ejemplito
     qsort2(&hola[0],&hola[5],1);
     int i;
     for(i=0;i<6;i++){
       printf("%s\n",hola[i]);
-    }
-    /*if(output == NULL){
+    }*/
+    if(output == NULL){
       fprintf (stderr,"Debe ingresar -o indicando el archivo de salida.\n");
       exit(EXIT_FAILURE);
     }
@@ -194,6 +197,6 @@ int main(int argc, char *argv[]){
       liberar_arreglo(array_lineas, cant_lineas);
       exit(EXIT_FAILURE);
     }
-    liberar_arreglo(array_lineas, cant_lineas);*/
+    liberar_arreglo(array_lineas, cant_lineas);
     return 0;
 }

@@ -33,10 +33,10 @@
 
 
 #CONSTANTES DE LA FUNCION STRCMP
-#define SS_strcmp 32
-#define of_gp_strcmp 20
-#define of_fp_strcmp 24
-#define of_a1_strcmp 36
+#define SS_strcmp 24
+#define of_gp_strcmp 16
+#define of_fp_strcmp 20
+#define of_a1_strcmp 28
 
 #COMIENZA EL CODIGO
 
@@ -153,54 +153,46 @@ loop:   add t5,s2 ,t4           #t5 = izq + i
         #Parametros para strcmp(char* cadena1, char* cadena2)
         lw a0, 0(t5)           #a0 = izq + 1
         move a1, s5            #a1 = valor_pivote
-        jal strcmp
+        jal mystrcmp
         nop
 
         bgt zero, v0, cambio      # if(*(izq + i) <= valor_pivote ) -> swapeo
-        nop
 
         add t4,t4,4             # i++
         b loop
 
 pre_atoi: lw a0, 0(t5)           # a0 = *(izq +i)
           jal atoi
-          move t1, v0            #guardo el valor de atoi en t5
+          nop
+          move t1, v0            #guardo el valor de atoi en t1
+
+          sw t1, 16(sp)         #guardo valor del primer atoi en el LTA
+
           move a0, s5            # a0 = valor_pivote
           jal atoi
-          move s0, v0            #guardo el valor de atoi en s0
+          move t2, v0            #guardo el valor de atoi en t2
 
+          lw t1, 16(sp)          #restauro valor del primer atoi del LTA
+          nop
           add t4,t4,4
-          bgt s0,t1,loop         #if (a>b) ->loop sino swapeo(cambio)
+          bgt t1,t2,loop         #if (a>b) ->loop sino swapeo(cambio)
 
-cambio: #move a0, t5             #a0 = izq + 1
-        #move a1, s0             #a1 = pivote
+cambio: move a0, t5             #a0 = izq + 1
+        move a1, s0             #a1 = pivote
 
-        #sw t5, 20(sp)           #guardo el valor de t5 porque nose si swap lo puede cambiar
+        sw t5, 20(sp)           #guardo el valor de t5 porque nose si swap lo puede cambiar
 
-        #jal swap
-        #nop
-        #swap2
-        lw t6, 0(t5)
-        lw t7, 0(s0)
-
-        sw t7, 0(t5)
-        sw t6, 0(s0)
+        jal swap
 
         add s0,s0,4             #pivote++
 
-        #lw t5, 20(sp)           #restauro valor de t5
+        lw t5, 20(sp)           #restauro valor de t5
 
-        #move a0, t5             #a0 = izq + 1
-        #move a1, s0             #a1 = pivote
+        move a0, t5             #a0 = izq + 1
+        move a1, s0             #a1 = pivote
 
-        #jal swap
-        #nop
-        #swap2
-        lw t6, 0(t5)
-        lw t7, 0(s0)
-
-        sw t7, 0(t5)
-        sw t6, 0(s0)
+        jal swap
+        nop
 
         b loop
 
@@ -245,20 +237,33 @@ atoi:   .ent atoi
         li v0, 0
         move t0, a0                 #muevo (char* letra) a t0
 
-loop_atoi: lbu t1, 0(t0)            # t1 = *letra
-           beq zero, t1, fin_atoi   #if (letra == 0) -> fin_atoi
-           sub t2, t1, 48
-           mul v0, v0, 10
-           add v0, v0, t2
-           add t0, t0, 1
-           b loop_atoi
-           nop
+        #Obtenemos el signo
+        li t3, 1
+			  lb t1, 0(t0)				 #obtengo el primer caracter
+			  bne t1, 45, loop_atoi	 #if (!"-") -> paso al loop, si no es un - salto directo al loop
+			  li t3, -1				 #t3 = -1
+			  addu t0, t0, 1			 #salteo el signo
 
-fin_atoi:  lw $fp, of_fp_atoi(sp)
-           lw gp, of_gp_atoi(sp)
-           addi sp, sp, of_atoi
-           jr ra
-       	   .end atoi
+
+loop_atoi:
+        lbu t1, 0(t0)            # t1 = *letra
+		    beq zero, t1, fin_atoi   #if (letra == 0) -> fin_atoi
+		    blt t1, 48, fin_atoi	#corroboro que  0 <= t1 sino -> fin_atoi
+		    bgt t1, 57, fin_atoi	#corroboro que 9 >= t1 sino -> fin_atoi
+		    mul v0, v0, 10			# v0 *= 10.
+        sub t2, t1, 48			# t2 = t1 - ’0’
+		    add v0, v0, t2			# v0 += t2
+        add t0, t0, 1			# t0 += 1
+        b loop_atoi				# repito el loop
+        nop
+
+fin_atoi:
+        mul v0, v0, t3		 # set the sign properly.
+		    lw $fp, of_fp_atoi(sp)
+        lw gp, of_gp_atoi(sp)
+        addi sp, sp, of_atoi
+        jr ra
+       	.end atoi
 
 
 #------------------------------------------------------------------------------------------------------------------------------
@@ -267,8 +272,8 @@ fin_atoi:  lw $fp, of_fp_atoi(sp)
 
 #Parametros a0 posicion inicial de cadena 1, a1 posicion inicial de cadena 2
 
-strcmp:
-      .ent strcmp
+mystrcmp:
+      .ent mystrcmp
       .frame $fp, SS_strcmp, ra
       .set noreorder
       .cpload $25
@@ -285,7 +290,6 @@ strcmp:
       sw s1, 4(sp)
       sw s2, 8(sp)
       sw s3, 12(sp)
-      sw s4, 16(sp)
 
       move $fp, sp
 
@@ -297,7 +301,7 @@ strcmp:
       move s0, a0       # puntero a cadena 1 en i
       move s1, a1       # puntero a cadena 2 en i
 
-      move s4, zero     # return value c>0 si cadena1>cadena2, c<0 si cadena2>=cadena1
+      move t0, zero     # return value c>0 si cadena1>cadena2, c<0 si cadena2>=cadena1
 
 
 
@@ -311,9 +315,9 @@ loop_cmp:
       beq zero, s3, mayor_cadena1 #son iguales pero la cadena 1 es mas larga que la cadena 2
       nop
 
-      sub s4, s2, s3
+      sub t0, s2, s3
 
-      bnez s4, fin_cmp
+      bnez t0, fin_cmp
       nop
 
       add s0, s0, 1 #avanzamos la cadena1
@@ -322,7 +326,7 @@ loop_cmp:
       b loop_cmp
 
 fin_cmp:
-      move v0, s4 #devuelvo positivo o negativo segun sea correspondiente
+      move v0, t0 #devuelvo positivo o negativo segun sea correspondiente
 
       #epilogo
       lw $fp, of_fp_strcmp(sp)
@@ -332,20 +336,19 @@ fin_cmp:
       lw s1, 4(sp)
       lw s2, 8(sp)
       lw s3, 12(sp)
-      lw s4, 16(sp)
 
       addi sp, sp, SS_strcmp
       jr ra
 
 mayor_cadena1:
-      li s4, 1 #lo seteo positivo
+      li t0, 1 #lo seteo positivo
       b fin_cmp
 
 mayor_cadena2:
-      li s4, -1 #lo seteo negativo
+      li t0, -1 #lo seteo negativo
       b fin_cmp
 
-      .end strcmp
+      .end mystrcmp
 
 
 #------------------------------------------------------------------------------------------------------------------------------
