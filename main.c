@@ -41,7 +41,7 @@ Imprime ayuda.\n\
 Archivo de salida.\n\
 \t-n, --numeric\t Ordenar los datos numéricamente en vez de alfabéticamente.\n\
 Examples:\n\
-\tqsort -n numeros.txt\n");
+\tqsort -n -o numeros.txt\n");
 }
 
 void print_version(){
@@ -104,7 +104,8 @@ void liberar_arreglo(char** array, size_t cant){
 
 bool escribir_archivo(char** array, size_t n, char* output){
   FILE* archivo;
-  if(strcmp(output,"-")== 0){
+  if(output != NULL && strcmp(output,"-")== 0){
+
       archivo = stdout;
   }
   else{
@@ -123,7 +124,7 @@ bool escribir_archivo(char** array, size_t n, char* output){
 
 
 int main(int argc, char *argv[]){
-  if (argc == 1){
+  /*if (argc == 1){
     fprintf (stderr,"Ingrese los parámetros necesarios.\n");
     exit(EXIT_FAILURE);
   }
@@ -144,7 +145,6 @@ int main(int argc, char *argv[]){
         return 0;
       case 'o':
         output = optarg;
-        //printf("output file is %s.\n",output);
         break;
       case 'n':
         numeric = true;
@@ -163,14 +163,14 @@ int main(int argc, char *argv[]){
       fprintf (stderr, "Indique el parámetro previo al archivo.\n");
       exit(EXIT_FAILURE);
     }
-    if (optind >= argc) {
+    if (optind > argc) {
         fprintf(stderr, "Ingrese un archivo luego del parámetro.\n");
          exit(EXIT_FAILURE);
      }
-    /*size_t cant_lineas = contar_lineas(argv[argc-1]);
+    size_t cant_lineas = contar_lineas(argv[argc-1]);
     char** array_lineas = cargar_archivo(argv[argc-1],cant_lineas);
     if(!array_lineas){
-      fprintf (stderr,"Error al manipulate file.\n");
+      fprintf (stderr,"Error al manipular archivo.\n");
       exit(EXIT_FAILURE);
     }
     int n = 0;
@@ -184,7 +184,11 @@ int main(int argc, char *argv[]){
     for(i=0;i<6;i++){
       printf("%s\n",hola[i]);
     }
-    /*bool escribio = escribir_archivo(array_lineas, cant_lineas,output);
+    /*if(output == NULL){
+      fprintf (stderr,"Debe ingresar -o indicando el archivo de salida.\n");
+      exit(EXIT_FAILURE);
+    }
+    bool escribio = escribir_archivo(array_lineas, cant_lineas,output);
     if(!escribio){
       fprintf (stderr,"Error al escribir el archivo de output.\n");
       liberar_arreglo(array_lineas, cant_lineas);

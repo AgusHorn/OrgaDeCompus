@@ -60,7 +60,7 @@ qsort2: .ent qsort2
         .cprestore offset_gp
         sw ra, offset_ra(sp)
         sw $fp, offset_fp(sp)
-        #sw gp, offset_gp(sp)
+        sw gp, offset_gp(sp)
 
         move $fp, sp
 
@@ -115,7 +115,7 @@ pivotear: .ent pivotear
 
         sw ra, of_ra_pivotear(sp)
         sw $fp, of_fp_pivotear(sp)
-        #sw gp, of_gp_pivotear(sp)
+        sw gp, of_gp_pivotear(sp)
 
         move $fp, sp
 
@@ -204,14 +204,13 @@ cambio: #move a0, t5             #a0 = izq + 1
 
         b loop
 
-fin_piv:
-
-        move v0, s0
+fin_piv: move v0, s0
 
         #epilogo pivotear
         lw ra, of_ra_pivotear(sp)
+        nop
         lw $fp, of_fp_pivotear(sp)
-        #lw gp, of_gp_pivotear(sp)
+        lw gp, of_gp_pivotear(sp)
 
 
         lw s0, 24(sp)
@@ -239,7 +238,7 @@ atoi:   .ent atoi
         subu sp, sp, of_atoi        #dejamos espacio en el stack para:
         .cprestore of_gp_atoi
         sw $fp, of_fp_atoi(sp)      #guardar fp
-        #sw gp, of_gp_atoi(sp)      #guardar gp
+        sw gp, of_gp_atoi(sp)      #guardar gp
 
         move $fp, sp
 
@@ -257,8 +256,8 @@ loop_atoi: lbu t1, 0(t0)            # t1 = *letra
 
 fin_atoi:  lw $fp, of_fp_atoi(sp)
            lw gp, of_gp_atoi(sp)
-           jr ra
            addi sp, sp, of_atoi
+           jr ra
        	   .end atoi
 
 
@@ -280,7 +279,7 @@ strcmp:
       .cprestore of_gp_strcmp
 
       sw $fp, of_fp_strcmp(sp)
-      #sw gp, of_gp_strcmp(sp)
+      sw gp, of_gp_strcmp(sp)
 
       sw s0, 0(sp)
       sw s1, 4(sp)
@@ -365,7 +364,7 @@ swap: .ent swap
       .cprestore of_gp_swap
 
       sw $fp, of_fp_swap(sp)
-      #sw gp, of_gp_swap(sp)
+      sw gp, of_gp_swap(sp)
 
       move $fp, sp
 
