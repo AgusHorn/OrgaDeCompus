@@ -7,7 +7,7 @@ main: cache.o main.o
 	$(CC) $(CFLAGS) -o main $(OBJ)
 
 cache.o: cache.h cache.c
-	$(CC) $(CFLAGS) -c pila.c
+	$(CC) $(CFLAGS) -c cache.c
 
 main.o:main.c
 	$(CC) $(CFLAGS) main.c -c
