@@ -199,7 +199,7 @@ int read_byte(int address){
   }else{//hit
     value = cache->sets[setnum].bloques[way].bytes[offset];
   }
-  return (int)value;
+  return (0xFF & (int)value);
 }
 
 
@@ -219,14 +219,13 @@ int write_byte(int address, char value){
     cache->misses++;
     memoria[address] = value;
     read_block(((tag << 10) | (setnum << 6))/BLOCKSIZE);//me traigo el bloque a la cache.
-    return (int)value;//cuando salio todo bien
+    return (0xFF & (int)value);//cuando salio todo bien
   }
 
   cache->sets[setnum].bloques[way].bytes[offset] = value;
   cache->sets[setnum].bloques[way].dirty = 1;//la cache esta actualizada y la memoria no.
 
-
-  return (int)value;//cuando salio todo bien
+  return (0xFF & (int)value);//cuando salio todo bien, para extender sin sin signo
 
 }
 

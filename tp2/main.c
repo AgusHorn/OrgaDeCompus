@@ -38,9 +38,9 @@ void realizar_write(char* direccion, char* valor){
   }
 
   //TODO: No se como pasar el valor de char* a char
-  //printf("el char* value es %s\n",valor);
-  char value = *valor;//esto me toma solo el primer valor y vienen 3
-  printf("Write devuelve: %d\n",write_byte(address, value));
+  unsigned int value = atoi(valor);//esto me toma solo el primer valor y vienen 3
+  char valor_char = (char)value;
+  printf("Write devuelve: %d\n",(unsigned int)write_byte(address, valor_char));
 }
 
 
