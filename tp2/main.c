@@ -7,6 +7,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stddef.h>
+#include <time.h>
 
 
 #include "cache.h"
@@ -51,6 +52,14 @@ bool procesar_archivo(const char* nombre){
     return false;
   }
   char* linea = NULL; size_t capacidad = 0; ssize_t leidos;
+
+  //Medimos tiempo de procesar cada archivo
+
+  clock_t tiempo_inicio, tiempo_final;
+  double segundos;
+
+  tiempo_inicio = clock();
+
   while((leidos = getline(&linea,&capacidad,archivo)) > 0){
     if(strcmp(linea, "MR\n") == 0){
       printf("Miss_rate es: %d\n", get_miss_rate());
@@ -70,6 +79,13 @@ bool procesar_archivo(const char* nombre){
     }
 
   }
+
+  tiempo_final = clock();
+
+  segundos = (double)(tiempo_final - tiempo_inicio) / CLOCKS_PER_SEC; /*según que estes midiendo el tiempo en segundos es demasiado grande*/
+
+  printf("Procesar el archivo tardó: %f\n",segundos);
+
   free(linea);
   fclose(archivo);
   return true;
@@ -91,5 +107,5 @@ int main(int argc, char *argv[]){
   }
 
 
-    return 0;
+  exit(EXIT_SUCCESS);
 }
