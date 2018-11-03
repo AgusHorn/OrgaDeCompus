@@ -62,7 +62,7 @@ set_t init_set(){
   return set;
 }
 
-cache_t* cache;
+cache_t cache;
 
 char memoria[MEMSIZE];
 
@@ -71,16 +71,16 @@ char memoria[MEMSIZE];
 //PRIMITIVAS DE LA SIMULACION
 
 void init(){
-    cache = malloc(sizeof(cache_t));
-    if(!cache) return;//TODO: Avisar error
-    cache->misses = 0;
-    cache->access = 0;
-    //cache->sets = malloc(sizeof(set_t)*16);//16 conjuntos de 4 bloques cada uno
+    //cache = malloc(sizeof(cache_t));
+    //if(!cache) return;//TODO: Avisar error
+    cache.misses = 0;
+    cache.access = 0;
+    //cache.sets = malloc(sizeof(set_t)*16);//16 conjuntos de 4 bloques cada uno
 
-    //if(!cache->sets)return NULL;
+    //if(!cache.sets)return NULL;
 
     for(int i = 0; i<16; i++){
-        cache->sets[i] = init_set();
+        cache.sets[i] = init_set();
     }
 
     //memoria = malloc(sizeof(int)*65535);//cantidad de words en memoria
@@ -91,12 +91,12 @@ int find_set(int address){
 }
 
 int find_lru(int setnum){
-    int lru = cache->sets[setnum].count;
+    int lru = cache.sets[setnum].count;
     int way;
     for(int i = 0; i<ASOCIATIVIDAD; i++){
-      if(cache->sets[setnum].bloques[i].num_access <= lru){
+      if(cache.sets[setnum].bloques[i].num_access <= lru){
         way = i;
-        lru = cache->sets[setnum].bloques[i].num_access;//siempre me quedo con el menor ("el ultimo accedido")
+        lru = cache.sets[setnum].bloques[i].num_access;//siempre me quedo con el menor ("el ultimo accedido")
       }
     }
     return way;
@@ -104,7 +104,7 @@ int find_lru(int setnum){
 }
 
 int is_dirty(int way, int setnum){
-    return cache->sets[setnum].bloques[way].dirty;
+    return cache.sets[setnum].bloques[way].dirty;
 }
 
 /*void free_memory(){
@@ -121,9 +121,9 @@ int get_tag(int address){
 
 int is_hit(int setnum, int tag){
   for(int i = 0; i<ASOCIATIVIDAD; i++){
-    if(cache->sets[setnum].bloques[i].valid == 1 && cache->sets[setnum].bloques[i].tag == tag){
-      cache->sets[setnum].count++;//actualizo el contador del lru
-      cache->sets[setnum].bloques[i].num_access = cache->sets[setnum].count;//actualizo el contador de lru
+    if(cache.sets[setnum].bloques[i].valid == 1 && cache.sets[setnum].bloques[i].tag == tag){
+      cache.sets[setnum].count++;//actualizo el contador del lru
+      cache.sets[setnum].bloques[i].num_access = cache.sets[setnum].count;//actualizo el contador de lru
       return i;
     }
   }
@@ -140,13 +140,13 @@ void read_block(int blocknum){
   bool habia_espacio = false;
   int i = 0;
   for(; i<ASOCIATIVIDAD; i++){
-    if(cache->sets[setnum].bloques[i].valid == 0){
+    if(cache.sets[setnum].bloques[i].valid == 0){
       //printf("Encontre un lugar vacio\n");
-      memcpy(cache->sets[setnum].bloques[i].bytes,&memoria[address],BLOCKSIZE);
-      cache->sets[setnum].bloques[i].valid = 1;
-      cache->sets[setnum].bloques[i].tag = tag;
-      cache->sets[setnum].count++;//actualizo el contador del lru
-      cache->sets[setnum].bloques[i].num_access = cache->sets[setnum].count;//actualizo el contador de lru
+      memcpy(cache.sets[setnum].bloques[i].bytes,&memoria[address],BLOCKSIZE);
+      cache.sets[setnum].bloques[i].valid = 1;
+      cache.sets[setnum].bloques[i].tag = tag;
+      cache.sets[setnum].count++;//actualizo el contador del lru
+      cache.sets[setnum].bloques[i].num_access = cache.sets[setnum].count;//actualizo el contador de lru
       habia_espacio = true;
       return;
     }
@@ -156,12 +156,12 @@ void read_block(int blocknum){
     if(is_dirty(way_last_used,setnum)){ //tengo que reescribirlo en memoria porque cambio
       write_block(way_last_used, setnum);
     }
-    memcpy(cache->sets[setnum].bloques[way_last_used].bytes,&memoria[address],BLOCKSIZE);
-    cache->sets[setnum].bloques[way_last_used].valid = 1;
-    cache->sets[setnum].bloques[way_last_used].dirty = 0;//lo restauro a cero
-    cache->sets[setnum].bloques[way_last_used].tag = tag;
-    cache->sets[setnum].count++;//actualizo el contador del lru
-    cache->sets[setnum].bloques[way_last_used].num_access = cache->sets[setnum].count;//actualizo el contador de lru
+    memcpy(cache.sets[setnum].bloques[way_last_used].bytes,&memoria[address],BLOCKSIZE);
+    cache.sets[setnum].bloques[way_last_used].valid = 1;
+    cache.sets[setnum].bloques[way_last_used].dirty = 0;//lo restauro a cero
+    cache.sets[setnum].bloques[way_last_used].tag = tag;
+    cache.sets[setnum].count++;//actualizo el contador del lru
+    cache.sets[setnum].bloques[way_last_used].num_access = cache.sets[setnum].count;//actualizo el contador de lru
 
   }
 }
@@ -169,10 +169,10 @@ void read_block(int blocknum){
 
 //Escribe los datos del bloque setnum  de la via way
 void write_block(int way, int setnum){
-  int tag = cache->sets[setnum].bloques[way].tag << 10;
+  int tag = cache.sets[setnum].bloques[way].tag << 10;
   int index = setnum << 6;
   int address = tag | index;
-  memcpy(cache->sets[setnum].bloques[way].bytes,&memoria[address],BLOCKSIZE);
+  memcpy(cache.sets[setnum].bloques[way].bytes,&memoria[address],BLOCKSIZE);
 }
 
 int get_offset(int address){
@@ -190,14 +190,14 @@ int read_byte(int address){
   int setnum = find_set(address);
   int offset = get_offset(address);
   int way = is_hit(setnum, tag);
-  cache->access++;
+  cache.access++;
   char value;
   if(way == -1){//miss
-    cache->misses++;
+    cache.misses++;
     value = memoria[address];
     read_block(((tag << 10) | (setnum << 6))/BLOCKSIZE);//me traigo el bloque a la cache.
   }else{//hit
-    value = cache->sets[setnum].bloques[way].bytes[offset];
+    value = cache.sets[setnum].bloques[way].bytes[offset];
   }
   return (0xFF & (int)value);
 }
@@ -214,16 +214,16 @@ int write_byte(int address, char value){
   int setnum = find_set(address);
   int offset = get_offset(address);
   int way = is_hit(setnum, tag);
-  cache->access++;
+  cache.access++;
   if(way == -1){//miss
-    cache->misses++;
+    cache.misses++;
     memoria[address] = value;
     read_block(((tag << 10) | (setnum << 6))/BLOCKSIZE);//me traigo el bloque a la cache.
     return (0xFF & (int)value);//cuando salio todo bien
   }
 
-  cache->sets[setnum].bloques[way].bytes[offset] = value;
-  cache->sets[setnum].bloques[way].dirty = 1;//la cache esta actualizada y la memoria no.
+  cache.sets[setnum].bloques[way].bytes[offset] = value;
+  cache.sets[setnum].bloques[way].dirty = 1;//la cache esta actualizada y la memoria no.
 
   return (0xFF & (int)value);//cuando salio todo bien, para extender sin sin signo
 
@@ -232,5 +232,5 @@ int write_byte(int address, char value){
 
 //Devuelve el porcentaje de misses.
 int get_miss_rate(){
-  return (cache->misses*100/cache->access);
+  return (cache.misses*100/cache.access);
 }
