@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
+
 
 #define BLOCKSIZE 64 //(en bytes)
 
@@ -219,6 +221,7 @@ int write_byte(int address, char value){
     cache.misses++;
     memoria[address] = value;
     read_block(((tag << 10) | (setnum << 6))/BLOCKSIZE);//me traigo el bloque a la cache.
+    usleep(0.1);
     return (0xFF & (int)value);//cuando salio todo bien
   }
 
