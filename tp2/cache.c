@@ -185,6 +185,7 @@ int get_offset(int address){
 //Devolver el valor correspondiente a la posicion address
 int read_byte(int address){
   if(address<0 || address>MEMSIZE){
+    printf("Error: Direccion de memoria inválida.\n");
     return -1; //ERROR, TODO:Setear el errno
   }
 
@@ -221,7 +222,6 @@ int write_byte(int address, char value){
     cache.misses++;
     memoria[address] = value;
     read_block(((tag << 10) | (setnum << 6))/BLOCKSIZE);//me traigo el bloque a la cache.
-    usleep(0.1);
     return (0xFF & (int)value);//cuando salio todo bien
   }
 

@@ -12,6 +12,12 @@
 
 #include "cache.h"
 
+#define LAT 100 //en nanosegundos
+#define BW 133 //Mhz con un ancho de bus de 1 word (16 bits)
+#define BS 64 //en bytes
+#define WS 2 //WORD SIZE EN BYTES
+
+
 //TODO: Medir tiempos de ejecucion para despues poder comparar.
 
 void realizar_read(char* direccion){
@@ -53,16 +59,12 @@ bool procesar_archivo(const char* nombre){
   }
   char* linea = NULL; size_t capacidad = 0; ssize_t leidos;
 
-  //Medimos tiempo de procesar cada archivo
-
-  clock_t tiempo_inicio, tiempo_final;
-  double segundos;
-
-  tiempo_inicio = clock();
-
   while((leidos = getline(&linea,&capacidad,archivo)) > 0){
     if(strcmp(linea, "MR\n") == 0){
-      printf("Miss_rate es: %d\n", get_miss_rate());
+      int miss_rate = get_miss_rate();
+      printf("Miss_rate es: %d\n", miss_rate);
+      float t_miss = (float)(LAT + ((BS - WS)*1000 / (WS * BW)));
+      printf("Tiempo de acceso promedio:  %d nanosegundos.\n",(int)(miss_rate*((int)t_miss)/100) );
     }
     char* comando = strtok(linea, " ");
     if(strcmp(comando, "R") == 0){
@@ -79,12 +81,6 @@ bool procesar_archivo(const char* nombre){
     }
 
   }
-
-  tiempo_final = clock();
-
-  segundos = (double)(tiempo_final - tiempo_inicio) / CLOCKS_PER_SEC; /*según que estes midiendo el tiempo en segundos es demasiado grande*/
-
-  printf("Procesar el archivo tardó: %f\n",segundos);
 
   free(linea);
   fclose(archivo);
