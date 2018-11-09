@@ -28,8 +28,11 @@ void realizar_read(char* direccion){
      return;
    }
 
-   //Habria que verificar que es realmente un numero.
-   int address = atoi(direccion); //convierto la direccion en int
+   int address = atoi(direccion);//Convierto la direccion en int.
+   if (address == 0 && direccion[0] == 0){ //Si no es una conversion valida devuelve 0.
+     printf("Error en la dirección recibida.\n");
+     return;
+   }
 
    printf("Read devuelve: %d\n", read_byte(address));
 }
@@ -37,8 +40,11 @@ void realizar_read(char* direccion){
 
 void realizar_write(char* direccion, char* valor){
 
-  //Habria que verificar que es realmente un numero.
   int address = atoi(direccion);
+  if (address == 0 && strcmp(direccion, "0,") != 0){ //Si no es una conversion valida devuelve 0.
+    printf("Error en la dirección recibida.\n");
+    return;
+  }
 
   if(!valor){
     printf("Falta el valor a escribir.\n");
