@@ -119,8 +119,8 @@ LOOP_WHILE:
       lw t0, LRA_ITER($fp) #t0 = iterations
       beqz t0, FIN
 
-      lw t1, LRA_P($fp) #t1 = palette (fijarse como hscer para que entiendas que es un colour_t*)
-      addi t1,t1,1 #palette++
+      lw t1, LRA_P($fp) #t1 = palette (t1=p) (fijarse como hscer para que entiendas que es un colour_t*)
+      addi t1,t1,1 #p++
 
       sw t1, LRA_P($fp) #guardo el valores de la pallete (p)
 
@@ -145,16 +145,14 @@ LOOP_FOR:
       lw t9, LRA_ANT($fp) #t9 = ant*
       lw t1, 0(t9) #t1 = ant->x
 
-      addu t1,t1,t7 # t1 = grid[ant->x]
-
-      lw t2, t1 # t2 = grid->grid[ant->x]
+      addu t1,t1,t8 # t1 = grid->grid[ant->x]
 
       lw t3, 4(t9) # t3 = ant->y
-      addu t2,t3,t2 # t2 = grid->grid[antx][ant->y]
+      addu t1,t3,t1 # t1 = grid->grid[antx][ant->y]
 
       lw t4,LRA_P($fp) #t4 = p (pallete)
       lw t5, 0(t4) #t5 = *p
-      sw t5, t2 #  grid->grid[ant->x][ant->y] = *p;
+      sw t5, t1 #  grid->grid[ant->x][ant->y] = *p;
 
       lw t1, LRA_ANT($fp)
       sw t1, ABA_ANT($fp)
@@ -175,10 +173,6 @@ LOOP_FOR:
 
       lw t1, LRA_R($fp)
       sw t1, ABA_R($fp)
-
-
-      lw t7,LRA_ANT($fp)
-      sw t7,ABA_ANT($fp)
 
       lw t7,LRA_R($fp)
       lw t8,0(t7) #t8 = *r
