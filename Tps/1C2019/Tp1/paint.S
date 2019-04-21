@@ -6,11 +6,11 @@
 #define offset_fp 32
 #define offset_gp 28
 
-#define offset_a1 40
-#define offset_a2 44
-#define offset_a3 48
-#define offset_a4 52
-#define offset_a5 56
+#define offset_a1 44
+#define offset_a2 48
+#define offset_a3 52
+#define offset_a4 56
+#define offset_a5
 
 #CONSTANTES DE LA FUNCION BEGINNING_ANT
 #define SS_ba
@@ -21,14 +21,14 @@
 #define of_a1_ba
 
 #CONSTANTES DE LA FUNCION MOVE_ANT
-#define SS_ma
+#define SS_ma 8
 #define of_ra_ma
-#define of_fp_ma
-#define of_gp_ma
+#define of_fp_ma 4
+#define of_gp_ma 0
 
-#define of_a1_ma
-#define of_a2_ma
-#define of_a3_ma
+#define of_a1_ma  16
+#define of_a2_ma  8
+#define of_a3_ma  12
 
 #CONSTANTES DE LA FUNCION CHANGE_ORIENTATION
 #define SS_co
@@ -89,11 +89,11 @@ paint: #paint(void *ant1, void *grid1, void *palette1, void *rules1,  uint32_t i
       move $fp,sp
 
       #Argument building Area
-      sw a1,offset_a1($fp) #ant
-      sw a2,offset_a2($fp) #grid
-      sw a3,offset_a3($fp) #pallete
-      sw a4,offset_a4($fp) #rules
-      sw a5,offset_a5($fp) #iterations
+      sw a0,SS($fp) #ant
+      sw a1,offset_a1($fp) #grid
+      sw a2,offset_a2($fp) #pallete
+      sw a3,offset_a3($fp) #rules
+      sw a4,offset_a4($fp) #iterations
 
       #Saved Registers Area
       lw t0, offset_a5($fp)
@@ -178,7 +178,7 @@ LOOP_FOR:
       lw t8,0(t7) #t8 = *r
       sw t8,ABA_R($fp)
 
-      la t7,change_orientation
+      la t7,move_ant
       jalr t7
 
       sw v0, LRA_ANT($fp)
@@ -214,7 +214,7 @@ RESET_PALLETE:
       addi t7,t7,1
 
       lw t8, 0(t7) #t8 = *p
-      lw t2, offset_a3($fp) #t2 = pallete*
+      lw t2, offset_a2($fp) #t2 = pallete*
       lw t1, 0(t2)
       lw t2, t8 # *p = pallete[0]
 
@@ -301,12 +301,155 @@ beginning_ant:  .ent beginning_ant
 #------------------------------------------------------------------------------------------------------------------------------
 #                                       FUNCION MOVE_ANT
 #------------------------------------------------------------------------------------------------------------------------------
-move_ant:
-          subu sp,sp,size
-          sw fp,4(sp)
-          sw gp,
+#|----------|
+#|ant       |
+#|r         |   ABA DE PAINT
+#|grid      |
+#|----------|
+#|ant       |
+#|r         |   SRA
+#|----------|
+
+#define ON 0
+#define OS 1
+#define OE 2
+#define OW 3
+
+move_ant: #ant_t* move_ant(ant_t *ant, square_grid_t *grid, rotation_t rule)
+            #creo el stack
+            subu sp,sp,SS_ma
+            #sw $ra,offset_ra(sp)
+            sw $fp,of_fp_ma(sp)
+            sw $gp,of_gp_ma(sp)
+            move $fp,sp
+
+            #codigo de la FUNCION
+            lw t1,of_a1_ma($fp) #t1= ant*
+            lw t2,12(t1) #t2 = ant->o
+
+            beqz t2,CASE_ON
+
+            subi t3,t2,OS
+
+            beqz t3,CASE_OS
+
+            subi t3,t2,OE
+
+            beqz t3,CASE_EO
+
+            subi t3,t2,OW
+
+            beqz t3,CASE_OW
+
+FIN_MA:
+           #desarmo el stack
+            move sp,$fp
+            lw $fp,of_fp_ma(sp)
+            lw $gp,of_gp_ma(sp)
+            #lw ra, offset_ra(sp)
+            addu sp,sp,SS_ma
+            jr $ra
 
 
+CASE_ON:
+      lw t4,of_a1_ma($fp) #t4 = ant*
+      lw t5,0(t4) #t5 = ant->x
+
+      lw t6,of_a2_ma($fp) #t6 = grid*
+      lw t7,4(t6) #t7 = grid->height
+      addi t7,t7,-1
+
+      sub t7, t5,t7
+      beqz t7,ANTX_ON
+      addi t5,t5,1 #ant->x++
+      sw t5,0(t4) #ant->x = ant->x++
+      move v0,t4 #v0 = ant*
+
+      la t8,FIN_MA
+      jalr t8
+
+ANTX_ON:
+      lw t4,of_a1_ma($fp) #t4 = ant*
+
+      sw $zero,0(t4) #ant->x = 0
+      move v0,t4
+      la t8,FIN_MA
+      jalr t8
+
+CASE_OS:
+      lw t4,of_a1_ma($fp) #t4 = ant*
+      lw t5,0(t4) #t5 = ant->x
+
+      beqz t5,ANTX_OS
+      addi t5,t5,-1 #ant->x--
+      sw t5,0(t4) #ant->x = ant->x--
+      move v0,t4 #v0 = ant*
+
+      la t8,FIN_MA
+      jalr t8
+
+ANTX_ON:
+      lw t4,of_a1_ma($fp) #t4 = ant*
+
+      lw t6,of_a2_ma($fp) #t6 = grid*
+      lw t7,4(t6) #t7 = grid->height
+      addi t7,t7,-1
+
+      sw t7,0(t4) #ant->x = grid->height-1
+
+      move v0,t4
+      la t8,FIN_MA
+      jalr t8
+
+CASE_EO:
+      lw t4,of_a1_ma($fp) #t4 = ant*
+      lw t5,4(t4) #t5 = ant->y
+
+      lw t6,of_a2_ma($fp) #t6 = grid*
+      lw t7,0(t6) #t7 = grid->width
+      addi t7,t7,-1
+
+      sub t7, t5,t7
+      beqz t7,ANTX_EO
+      addi t5,t5,1 #ant->y++
+      sw t5,4(t4) #ant->y = ant->y++
+      move v0,t4 #v0 = ant*
+
+      la t8,FIN_MA
+      jalr t8
+
+ANTX_EO:
+      lw t4,of_a1_ma($fp) #t4 = ant*
+
+      sw $zero,4(t4) #ant->y = 0
+      move v0,t4
+      la t8,FIN_MA
+      jalr t8
+
+CASE_OW:
+      lw t4,of_a1_ma($fp) #t4 = ant*
+      lw t5,4(t4) #t5 = ant->y
+
+      beqz t5,ANTX_EO
+      addi t5,t5,-1 #ant->y--
+      sw t5,4(t4) #ant->y = ant->y--
+      move v0,t4 #v0 = ant*
+
+      la t8,FIN_MA
+      jalr t8
+
+ANTX_EO:
+      lw t4,of_a1_ma($fp) #t4 = ant*
+
+
+      lw t6,of_a2_ma($fp) #t6 = grid*
+      lw t7,0(t6) #t7 = grid->width
+      addi t7,t7,-1
+
+      sw t7,4(t4) #ant->y = grid->width-1
+      move v0,t4
+      la t8,FIN_MA
+      jalr t8
 
 #------------------------------------------------------------------------------------------------------------------------------
 #                                       FUNCION CHANGE_ORIENTATION
