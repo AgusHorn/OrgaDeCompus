@@ -1,22 +1,22 @@
 #include <mips/regdef.h>
 
 #CONSTANTES DE LA FUNCION PAINT
-#define SS 
-#define offset_ra 
-#define offset_fp 
-#define offset_gp 
+#define SS 40
+#define offset_ra 36
+#define offset_fp 32
+#define offset_gp 28
 
-#define offset_a1 
-#define offset_a2
-#define offset_a3
-#define offset_a4
-#define offset_a5 
+#define offset_a1 40
+#define offset_a2 44
+#define offset_a3 48
+#define offset_a4 52
+#define offset_a5 56
 
 #CONSTANTES DE LA FUNCION BEGINNING_ANT
-#define SS_ba 
-#define of_ra_ba 
+#define SS_ba
+#define of_ra_ba
 #define of_fp_ba
-#define of_gp_ba 
+#define of_gp_ba
 
 #define of_a1_ba
 
@@ -26,7 +26,7 @@
 #define of_fp_ma
 #define of_gp_ma
 
-#define of_a1_ma 
+#define of_a1_ma
 #define of_a2_ma
 #define of_a3_ma
 
@@ -37,7 +37,7 @@
 #define of_gp_co
 
 #define of_a1_co
-#define of_a2_co 
+#define of_a2_co
 
 
 #COMIENZA EL CODIGO
@@ -45,12 +45,205 @@
         .text
         .align 2
 
-        .globl qsort2
+        .globl paint
 #------------------------------------------------------------------------------------------------------------------------------
 #                                       FUNCION PAINT
 #------------------------------------------------------------------------------------------------------------------------------
 
-paint: 
+#|iterations|
+#|rules     |
+#|palette   |
+#|grid      |
+#|ant       |
+#|----------|
+#|ra        |
+#|fp        |   SRA
+#|gp        |
+#|----------|
+#|grid      |
+#|iter      |
+#|r         |
+#|p         |   LRA
+#|ant       |
+#|----------|
+#|ant       |
+#|r         |   ABA
+#|grid      |
+#|----------|
+
+#define LRA_GRID 28
+#define LRA_ITER 24
+#define LRA_P 16
+#define LRA_R 20
+#define LRA_ANT 12
+#define ABA_ANT 8
+#define ABA_R 4
+#define ABA_GRID 0
+
+paint: #paint(void *ant1, void *grid1, void *palette1, void *rules1,  uint32_t iterations)
+      #creo el stack
+      subu sp,sp,SS
+      sw $ra,offset_ra(sp)
+      sw $fp,offset_fp(sp)
+      sw $gp,offset_gp(sp)
+      move $fp,sp
+
+      #Argument building Area
+      sw a1,offset_a1($fp) #ant
+      sw a2,offset_a2($fp) #grid
+      sw a3,offset_a3($fp) #pallete
+      sw a4,offset_a4($fp) #rules
+      sw a5,offset_a5($fp) #iterations
+
+      #Saved Registers Area
+      lw t0, offset_a5($fp)
+      sw t0,LRA_ITER($fp)
+
+      lw t0, offset_a3($fp)
+      sw t0,LRA_P($fp)
+
+      lw t0, offset_a4($fp)
+      sw t0,LRA_R($fp)
+
+      lw t0, offset_a1($fp)
+      sw t0,LRA_ANT($fp)
+
+      lw t0, offset_a2($fp)
+      sw t0,LRA_GRID($fp)
+
+      b LOOP_WHILE
+
+
+      #codigo de la FUNCION
+LOOP_WHILE:
+      lw t0, LRA_ITER($fp) #t0 = iterations
+      beqz t0, FIN
+
+      lw t1, LRA_P($fp) #t1 = palette (fijarse como hscer para que entiendas que es un colour_t*)
+      addi t1,t1,1 #palette++
+
+      sw t1, LRA_P($fp) #guardo el valores de la pallete (p)
+
+      lw t2, LRA_ANT($fp) #t2 = ant*
+      sw t2, ABA_ANT($fp) #cargo en el aba ant *
+      la t3, beginning_ant #beginning_ant(ant*)
+      jalr t3
+
+      sw v0, LRA_ANT($fp) #guardo el valor del ant* que me devolvio
+
+      b LOOP_FOR
+LOOP_FOR:
+      lw t4, LRA_R #t4 = rules*
+      addi t6,t4,1 #rules++
+      beqz t6,DECREMENTAR_ITER #si r+1 = 0 termina
+
+
+      #FALTA HACER grid->grid[ant->x][ant->y] = *p;
+      lw t7,LRA_GRID($fp) #t7 = square_grid_t* grid
+      lw t8, 8(t7) #t8 = grid->grid (colour_t **)
+
+      lw t9, LRA_ANT($fp) #t9 = ant*
+      lw t1, 0(t9) #t1 = ant->x
+
+      addu t1,t1,t7 # t1 = grid[ant->x]
+
+      lw t2, t1 # t2 = grid->grid[ant->x]
+
+      lw t3, 4(t9) # t3 = ant->y
+      addu t2,t3,t2 # t2 = grid->grid[antx][ant->y]
+
+      lw t4,LRA_P($fp) #t4 = p (pallete)
+      lw t5, 0(t4) #t5 = *p
+      sw t5, t2 #  grid->grid[ant->x][ant->y] = *p;
+
+      lw t1, LRA_ANT($fp)
+      sw t1, ABA_ANT($fp)
+
+      lw t1, LRA_R($fp)
+      sw t1, ABA_R($fp)
+
+      la t1, change_orientation
+      jalr t1
+
+      sw v0, LRA_ANT($fp)
+
+      lw t1, LRA_ANT($fp)
+      sw t1, ABA_ANT($fp)
+
+      lw t1, LRA_GRID($fp)
+      sw t1, ABA_GRID($fp)
+
+      lw t1, LRA_R($fp)
+      sw t1, ABA_R($fp)
+
+
+      lw t7,LRA_ANT($fp)
+      sw t7,ABA_ANT($fp)
+
+      lw t7,LRA_R($fp)
+      lw t8,0(t7) #t8 = *r
+      sw t8,ABA_R($fp)
+
+      la t7,change_orientation
+      jalr t7
+
+      sw v0, LRA_ANT($fp)
+
+      lw t7,LRA_ANT($fp)
+      sw t7,ABA_ANT($fp)
+
+      lw t7,LRA_R($fp)
+      lw t8,0(t7) #t8 = *r
+      sw t8,ABA_R($fp)
+
+      lw t7,LRA_GRID($fp)
+      sw t7,ABA_GRID($fp)
+
+      la t7,move_ant
+      jalr t7
+
+      sw v0, LRA_ANT($fp)
+
+      lw t7,LRA_P
+      addi t7,t7,1
+
+      lw t8, 0(t7) #t8 = *p
+      addi t8,t8,1
+      beqz t8,RESET_PALLETE
+      b LOOP_FOR
+
+
+
+RESET_PALLETE:
+
+      lw t7,LRA_P
+      addi t7,t7,1
+
+      lw t8, 0(t7) #t8 = *p
+      lw t2, offset_a3($fp) #t2 = pallete*
+      lw t1, 0(t2)
+      lw t2, t8 # *p = pallete[0]
+
+      B LOOP_FOR
+
+
+
+DECREMENTAR_ITER:
+      lw t5,LRA_ITER($fp)
+      addi t5,t5,-1
+      sw t5,LRA_ITER
+      b LOOP_WHILE
+
+FIN:
+      lw v0,LRA_GRID($fp)
+
+      #desarmo el stack
+      move sp,$fp
+      lw $fp,offset_fp(sp)
+      lw $gp,offset_gp(sp)
+      lw ra, offset_ra(sp)
+      addu sp,sp,SS
+      jr $ra
 
 
 
@@ -114,6 +307,10 @@ beginning_ant:  .ent beginning_ant
 #------------------------------------------------------------------------------------------------------------------------------
 #                                       FUNCION MOVE_ANT
 #------------------------------------------------------------------------------------------------------------------------------
+move_ant:
+          subu sp,sp,size
+          sw fp,4(sp)
+          sw gp,
 
 
 
