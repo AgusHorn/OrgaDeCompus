@@ -13,12 +13,12 @@
 #define offset_a5
 
 #CONSTANTES DE LA FUNCION BEGINNING_ANT
-#define SS_ba
+#define SS_ba 8
 #define of_ra_ba
-#define of_fp_ba
-#define of_gp_ba
+#define of_fp_ba 4
+#define of_gp_ba 0
 
-#define of_a1_ba
+#define of_a1_ba 16
 
 #CONSTANTES DE LA FUNCION MOVE_ANT
 #define SS_ma 8
@@ -251,14 +251,14 @@ FIN:
 #Parametros a0 puntero a ant_t.
 
 beginning_ant:  .ent beginning_ant
-				.frame fp, SS_ba, ra
+			.frame fp, SS_ba, ra
           		.set noreorder
           		.cpload 25
           		.set noreorder
 
           		#prologo beginning_ant
-      			subu sp, sp, SS_strcmp
-      			.cprestore of_gp_strcmp
+      			subu sp, sp, SS_ba
+      			.cprestore of_gp_ba
 
       			sw fp, of_fp_ba(sp)
       			sw gp, of_gp_ba(sp)
@@ -266,7 +266,7 @@ beginning_ant:  .ent beginning_ant
       			move fp, sp
 
       			#guardo el parámetro en el ABA
-      			sw a0, of_a1_ba(sp)
+      			sw a0, of_a1_ba(fp)
 
       			la t0, 0(a0)    #Addr of Ant->x
       			la t1, 4(a0)	#Addr of Ant->y
@@ -293,11 +293,6 @@ beginning_ant:  .ent beginning_ant
 
       			.end beginning_ant
 
-
-
-
-
-
 #------------------------------------------------------------------------------------------------------------------------------
 #                                       FUNCION MOVE_ANT
 #------------------------------------------------------------------------------------------------------------------------------
@@ -306,8 +301,8 @@ beginning_ant:  .ent beginning_ant
 #|r         |   ABA DE PAINT
 #|grid      |
 #|----------|
-#|ant       |
-#|r         |   SRA
+#|fp        | 
+#|gp        |   SRA
 #|----------|
 
 #define ON 0
@@ -316,28 +311,29 @@ beginning_ant:  .ent beginning_ant
 #define OW 3
 
 move_ant: #ant_t* move_ant(ant_t *ant, square_grid_t *grid, rotation_t rule)
-            #creo el stack
+
+            #Creo el stack
             subu sp,sp,SS_ma
             #sw $ra,offset_ra(sp)
             sw $fp,of_fp_ma(sp)
             sw $gp,of_gp_ma(sp)
             move $fp,sp
 
-            #codigo de la FUNCION
+            #Codigo de la FUNCION
             lw t1,of_a1_ma($fp) #t1= ant*
             lw t2,12(t1) #t2 = ant->o
 
             beqz t2,CASE_ON
 
-            subi t3,t2,OS
+            subi t3,t2,1
 
             beqz t3,CASE_OS
 
-            subi t3,t2,OE
+            subi t3,t2,1
 
-            beqz t3,CASE_EO
+            beqz t3,CASE_OE
 
-            subi t3,t2,OW
+            subi t3,t2,1
 
             beqz t3,CASE_OW
 
@@ -352,8 +348,7 @@ FIN_MA:
 
 
 CASE_ON:
-      lw t4,of_a1_ma($fp) #t4 = ant*
-      lw t5,0(t4) #t5 = ant->x
+      lw t5,0(t1) #t5 = ant->x
 
       lw t6,of_a2_ma($fp) #t6 = grid*
       lw t7,4(t6) #t7 = grid->height
@@ -362,48 +357,32 @@ CASE_ON:
       sub t7, t5,t7
       beqz t7,ANTX_ON
       addi t5,t5,1 #ant->x++
-      sw t5,0(t4) #ant->x = ant->x++
-      move v0,t4 #v0 = ant*
-
-      la t8,FIN_MA
-      jalr t8
+      sw t5,0(t1) #ant->x = ant->x++
+      j FIN_SWITCH
 
 ANTX_ON:
-      lw t4,of_a1_ma($fp) #t4 = ant*
-
-      sw $zero,0(t4) #ant->x = 0
-      move v0,t4
-      la t8,FIN_MA
-      jalr t8
+      sw $zero,0(t1) #ant->x = 0
+      j FIN_SWITCH
 
 CASE_OS:
-      lw t4,of_a1_ma($fp) #t4 = ant*
-      lw t5,0(t4) #t5 = ant->x
+      lw t5,0(t1) #t5 = ant->x
 
       beqz t5,ANTX_OS
       addi t5,t5,-1 #ant->x--
-      sw t5,0(t4) #ant->x = ant->x--
-      move v0,t4 #v0 = ant*
+      sw t5,0(t1) #ant->x = ant->x--
+      j FIN_SWITCH
 
-      la t8,FIN_MA
-      jalr t8
-
-ANTX_ON:
-      lw t4,of_a1_ma($fp) #t4 = ant*
+ANTX_OS:
 
       lw t6,of_a2_ma($fp) #t6 = grid*
       lw t7,4(t6) #t7 = grid->height
       addi t7,t7,-1
 
-      sw t7,0(t4) #ant->x = grid->height-1
+      sw t7,0(t1) #ant->x = grid->height-1
+      j FIN_SWITCH
 
-      move v0,t4
-      la t8,FIN_MA
-      jalr t8
-
-CASE_EO:
-      lw t4,of_a1_ma($fp) #t4 = ant*
-      lw t5,4(t4) #t5 = ant->y
+CASE_OE:
+      lw t5,4(t1) #t5 = ant->y
 
       lw t6,of_a2_ma($fp) #t6 = grid*
       lw t7,0(t6) #t7 = grid->width
@@ -412,45 +391,138 @@ CASE_EO:
       sub t7, t5,t7
       beqz t7,ANTX_EO
       addi t5,t5,1 #ant->y++
-      sw t5,4(t4) #ant->y = ant->y++
-      move v0,t4 #v0 = ant*
+      sw t5,4(t1) #ant->y = ant->y++
+      j FIN_SWITCH
 
-      la t8,FIN_MA
-      jalr t8
+ANTX_OE:
 
-ANTX_EO:
-      lw t4,of_a1_ma($fp) #t4 = ant*
-
-      sw $zero,4(t4) #ant->y = 0
-      move v0,t4
-      la t8,FIN_MA
-      jalr t8
+      sw $zero,4(t1) #ant->y = 0
+      j FIN_SWITCH
 
 CASE_OW:
-      lw t4,of_a1_ma($fp) #t4 = ant*
-      lw t5,4(t4) #t5 = ant->y
+      lw t5,4(t1) #t5 = ant->y
 
       beqz t5,ANTX_EO
       addi t5,t5,-1 #ant->y--
-      sw t5,4(t4) #ant->y = ant->y--
-      move v0,t4 #v0 = ant*
+      sw t5,4(t1) #ant->y = ant->y--
+      j FIN_SWITCH
 
-      la t8,FIN_MA
-      jalr t8
-
-ANTX_EO:
-      lw t4,of_a1_ma($fp) #t4 = ant*
-
-
+ANTX_OW:
       lw t6,of_a2_ma($fp) #t6 = grid*
       lw t7,0(t6) #t7 = grid->width
       addi t7,t7,-1
 
-      sw t7,4(t4) #ant->y = grid->width-1
-      move v0,t4
+      sw t7,4(t1) #ant->y = grid->width-1
+      j FIN_SWITCH 
+
+FIN_SWITCH: 
+      move v0,t1
       la t8,FIN_MA
       jalr t8
 
 #------------------------------------------------------------------------------------------------------------------------------
 #                                       FUNCION CHANGE_ORIENTATION
 #------------------------------------------------------------------------------------------------------------------------------
+#|----------|
+#|ant       |
+#|r         |   ABA DE PAINT
+#|grid      |
+#|----------|
+#|fp        | 
+#|gp        |   SRA
+#|----------|
+
+#define ON 0
+#define OS 1
+#define OE 2
+#define OW 3
+
+change_orientation: #ant_t* change_orientation(ant_t *ant, rotation_t rule)
+
+            #Creo el stack
+            subu sp,sp,SS_co
+
+            sw $fp,of_fp_co(sp)
+            sw $gp,of_gp_co(sp)
+            move $fp,sp
+
+            lw t1,of_a1_co($fp)     #t1= ant*
+            lw t2,8(t1)             #t2 = ant->o
+
+            lw t3, of_a2_co($fp)    #t3 = rule
+
+            beqz t2,CASE_ON
+
+            subi t3,t2,1
+
+            beqz t3,CASE_OS
+
+            subi t3,t2,1
+
+            beqz t3,CASE_OE
+
+            subi t3,t2,1
+
+            beqz t3,CASE_OW
+
+FIN_CO:
+           #desarmo el stack
+            move sp,$fp
+            lw $fp,of_fp_co(sp)
+            lw $gp,of_gp_co(sp)
+            #lw ra, offset_ra(sp)
+            addu sp,sp,SS_co
+            jr $ra
+
+
+CASE_ON:
+
+      beqz t3, ANTX_ON        # if rule == RL -> ANTX_ON
+                              # rule == RR
+      addi t2, t2, OE         # ant->o = OE
+      j FIN_SWITCH
+
+ANTX_ON:
+                              # rule == RL
+      addi t2, t2, OW         # ant->o = OW
+      j FIN_SWITCH
+
+CASE_OS:
+      beqz t3, ANTX_OS        # if rule == RL -> ANTX_OS
+                              # rule == RR
+      addi t2, t2, OW         # ant->o = OW
+      j FIN_SWITCH
+
+ANTX_OS:
+                              # rule == RL
+      addi t2, t2, OE         # ant->o = OE
+      j FIN_SWITCH
+
+CASE_OE:
+      beqz t3, ANTX_OE        # if rule == RL -> ANTX_OE
+                              # rule == RR
+      addi t2, t2, OS         # ant->o = OS
+      j FIN_SWITCH
+
+ANTX_OE:
+                              # rule == RL
+      addi t2, t2, ON         # ant->o = ON
+      j FIN_SWITCH
+
+CASE_OW:
+      beqz t3, ANTX_OW        # if rule == RL -> ANTX_OW
+                              # rule == RR
+      addi t2, t2, ON         # ant->o = ON
+      j FIN_SWITCH
+
+ANTX_OW:
+                              # rule == RL
+      addi t2, t2, OS         # ant->o = OS
+      j FIN_SWITCH
+
+FIN_SWITCH:
+      sw t2, 8(t1)            # Guardo el nuevo valor de ant->o
+      move v0, t1             # Muevo la dirección de la ant a v0
+
+      la t8,FIN_CO
+      jalr t8
