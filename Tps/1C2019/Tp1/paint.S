@@ -4,19 +4,16 @@
 #define offset_fp 40
 #define offset_gp 36
 
-#define offset_a1 56
-#define offset_a2 60
-#define offset_a3 64
-#define offset_a4 68
+#define offset_a1 60
+#define offset_a2 64
+#define offset_a3 68
+#define offset_a4 72
 
 #define LRA_GRID 32
 #define LRA_ITER 28
 #define LRA_P 20
 #define LRA_R 24
 #define LRA_ANT 16
-#define ABA_ANT 8
-#define ABA_R 4
-#define ABA_GRID 0
 
 #CONSTANTES DE LA FUNCION BEGINNING_ANT
 #define SS_ba 8
@@ -115,53 +112,46 @@ paint: #paint(void *ant1, void *grid1, void *palette1, void *rules1,  uint32_t i
       sw $t0,LRA_GRID($fp)
 
       b LOOP_WHILE
-      nop
-
 
       #codigo de la FUNCION
 LOOP_WHILE:
       lw $t0, LRA_ITER($fp) #t0 = iterations
       beqz $t0, FIN
 
-      lw $t1, LRA_P($fp) #t1 = palette (t1=p) (fijarse como hscer para que entiendas que es un colour_t*)
-      addi $t1,$t1,1 #p++
+      lw $t1, LRA_P($fp) #t1 = palette (t1=p)
+      addi $t1,$t1,4 #p++
 
       sw $t1, LRA_P($fp) #guardo el valores de la pallete (p)
 
-      lw $a0, LRA_ANT($fp) #t2 = ant*
-
-      la $t3, beginning_ant #beginning_ant(ant*)
-      jalr $t3
-
-      sw $v0, LRA_ANT($fp) #guardo el valor del ant* que me devolvio
-
       b LOOP_FOR
 LOOP_FOR:
-      lw $t4, LRA_R #t4 = rules*
-      addi $t6,$t4,1 #rules++
-      beqz $t6,DECREMENTAR_ITER #si r+1 = 0 termina
+      lw $t4, LRA_R($fp) #t4 = rules*
+      lw $t6,0($t4) #r*
+      addi $t6,$t6,1
+      beqz $t6,DECREMENTAR_ITER #si r*+1 = 0 termina
 
-
-      #FALTA HACER grid->grid[ant->x][ant->y] = *p;
       lw $t7,LRA_GRID($fp) #t7 = square_grid_t* grid
-      lw $t8, 8($t7) #t8 = grid->grid (colour_t **)
+      lw $t0, 8($t7) #t0 = grid->grid (colour_t **)
 
-      lw $t9, LRA_ANT($fp) #t9 = ant*
-      lw $t1, 0($t9) #t1 = ant->x
+      lw $t6, LRA_ANT($fp) #t6 = ant*
+      lw $t1, 0($t6) #t1 = ant->x
+      lw $t3, 4($t6) # t3 = ant->y
 
-      addu $t1,$t1,$t8 # t1 = grid->grid[ant->x]
+      lw $t4,0($t7) #grid->width cant de columnas
+      mul $t3,$t3,$t0  #ant->y *grid->width
+      addu $t3,$t3,$t1 #(ant->x + ant->y*grid->width)
+      addi $t7,$zero,4 #size
+      mul $t3,$t3,$t7 #(ant->x + ant->y*grid->width) * size
+      addu $t0,$t3,$t0 #grid->grid[ant->x][ant->y]
 
-      lw $t3, 4($t9) # t3 = ant->y
-      addu $t1,$t3,$t1 # t1 = grid->grid[antx][ant->y]
-
-      lw $t4,LRA_P($fp) #t4 = p (pallete)
-      lw $t5, 0($t4) #t5 = *p
-      sw $t5, 0($t1) #  grid->grid[ant->x][ant->y] = *p;
+      lw $t6,LRA_P($fp) #t6 = p (pallete)
+      lw $t5, 0($t6) #t5 = *p
+      sw $t5, 0($t0) #  grid->grid[ant->x][ant->y] = *p;
 
       lw $a0, LRA_ANT($fp)
 
       lw $t7,LRA_R($fp)
-      lw $a1,0($t7) #t8 = *r
+      lw $a1,0($t7) #t0 = *r
 
       la $t1, change_orientation
       jalr $t1
@@ -172,58 +162,44 @@ LOOP_FOR:
 
       lw $a1, LRA_GRID($fp)
 
-
-      lw $t7,LRA_R($fp)
-      lw $a2,0($t7) #t8 = *r
-
       la $t7,move_ant
       jalr $t7
 
       sw $v0, LRA_ANT($fp)
 
-      lw $t7,LRA_ANT($fp)
-      sw $t7,ABA_ANT($fp)
+      lw $t7,LRA_P($fp)
+      addi $t7,$t7,4
+      sw $t7,LRA_P($fp)
 
-      lw $t7,LRA_R($fp)
-      lw $t8,0($t7) #t8 = *r
-      sw $t8,ABA_R($fp)
+      lw $t0, 0($t7) #t0 = *p
+      addi $t0,$t0,1
+      beqz $t0,RESET_PALLETE
 
-      lw $t7,LRA_GRID($fp)
-      sw $t7,ABA_GRID($fp)
+      lw $t0,LRA_R($fp)
+      addi $t0,$t0,4
+      sw $t0,LRA_R($fp)
 
-      la $t7,move_ant
-      jalr $t7
-
-      sw $v0, LRA_ANT($fp)
-
-      lw $t7,LRA_P
-      addi $t7,$t7,1
-
-      lw $t8, 0($t7) #t8 = *p
-      addi $t8,$t8,1
-      beqz $t8,RESET_PALLETE
       b LOOP_FOR
 
 
 
 RESET_PALLETE:
 
-      lw $t7,LRA_P
-      addi $t7,$t7,1
+      lw $t7,LRA_P($fp)
 
-      lw $t8, 0($t7) #t8 = *p
+
       lw $t2, offset_a2($fp) #t2 = pallete*
-      lw $t1, 0($t2)
-      lw $t2, 0($t8) # *p = pallete[0]
+      lw $t1, 0($t2) #pallete[0]
+      lw $t1, 0($t7) # *p = pallete[0]
 
-      B LOOP_FOR
+      b LOOP_FOR
 
 
 
 DECREMENTAR_ITER:
       lw $t5,LRA_ITER($fp)
-      addi $t5,$t5,-1
-      sw $t5,LRA_ITER
+      addi $t5,$t5,-4
+      sw $t5,LRA_ITER($fp)
       b LOOP_WHILE
 
 FIN:
@@ -241,68 +217,12 @@ FIN:
 
 
 
-
-#------------------------------------------------------------------------------------------------------------------------------
-#                                       FUNCION BEGINNING_ANT
-#------------------------------------------------------------------------------------------------------------------------------
-
-#|----------|
-#|PADDING   |
-#|PADDING   |
-#|PADDING   |   ABA DE PAINT
-#|ant       |
-#|----------|
-#|fp        |
-#|gp        |   SRA
-#|----------|
-
-#Parametros a0 puntero a ant_t.
-      .globl beginning_ant
-beginning_ant:    .ent beginning_ant
-
-          		#prologo beginning_ant
-      		subu $sp, $sp, SS_ba
-      		.cprestore of_gp_ba
-
-      		sw $fp, of_fp_ba($sp)
-            	sw $gp, of_gp_ba($sp)
-
-     			move $fp, $sp
-
-     			sw $a0,of_a0_ba($fp)
-
-
-     			la $t0, 0($a0)      #Addr of Ant->x
-     			la $t1, 4($a0)	#Addr of Ant->y
-     			la $t2, 8($a0)	#Addr of Ant->o
-
-     			lw $t3, 0($t0)		#Ant->x
-     			lw $t4, 0($t1)		#Ant->y
-     			lw $t5, 0($t2)		#Ant->o
-
-     			addi $t3, $zero, 1	#Ant->x = 1
-     			addi $t4, $zero, 1	#Ant->y = 1
-     			add  $t5, $zero, $zero	#Ant->o = 0 (0 es la constante ON)
-
-     			sw $t3, 0($a0)
-     			sw $t4, 4($a0)
-     			sw $t5, 8($a0)
-
-      		#epilogo beginning_ant
-      		lw $fp, of_fp_ba($sp)
-      		lw $gp, of_gp_ba($sp)
-
-      		addi $sp, $sp, SS_ba
-      		jr $ra
-
-      		.end beginning_ant
-
 #------------------------------------------------------------------------------------------------------------------------------
 #                                       FUNCION MOVE_ANT
 #------------------------------------------------------------------------------------------------------------------------------
 #|----------|
 #|PADDING   |
-#|r*        |
+#|PADDING   |
 #|grid      |   ABA DE PAINT
 #|ant       |
 #|----------|
@@ -312,7 +232,7 @@ beginning_ant:    .ent beginning_ant
       .globl move_ant
       .ent move_ant
 
-move_ant: #ant_t* move_ant(ant_t *ant, square_grid_t *grid, rotation_t rule)
+move_ant: #ant_t* move_ant(ant_t *ant, square_grid_t *grid)
 
             #Creo el stack
             subu $sp,$sp,SS_ma
@@ -323,7 +243,7 @@ move_ant: #ant_t* move_ant(ant_t *ant, square_grid_t *grid, rotation_t rule)
 
             sw $a0,of_a0_ma($fp) #addr ant
             sw $a1,of_a1_ma($fp) #addr grid
-            sw $a2,of_a2_ma($fp) #r
+
 
             #Codigo de la FUNCION
             lw $t1,of_a0_ma($fp) #t1= ant*
@@ -360,7 +280,7 @@ CASE_ON:
       lw $t7,4($t6) #t7 = grid->height
       addi $t7,$t7,-1
 
-      sub $t7, $t5,$t7
+      subu $t7, $t5,$t7
       beqz $t7,ANTX_ON
       addi $t5,$t5,1 #ant->x++
       sw $t5,0($t1) #ant->x = ant->x++
@@ -394,7 +314,7 @@ CASE_OE:
       lw $t7,0($t6) #t7 = grid->width
       addi $t7,$t7,-1
 
-      sub $t7, $t5,$t7
+      subu $t7, $t5,$t7
       beqz $t7,ANTX_OE
       addi $t5,$t5,1 #ant->y++
       sw $t5,4($t1) #ant->y = ant->y++
@@ -436,7 +356,6 @@ FIN_SWITCH:
 #|r         |   ABA DE PAINT
 #|ant       |
 #|----------|
-#|fp        |
 #|gp        |   SRA
 #|----------|
       .globl change_orientationf
@@ -446,10 +365,11 @@ change_orientation: #ant_t* change_orientation(ant_t *ant, rotation_t rule)
             #Creo el stack
             subu $sp,$sp,SS_co
 
-            sw $fp,of_fp_co($sp)
+            #|fp        |
             sw $gp,of_gp_co($sp)
             move $fp,$sp
 
+            sw $fp,of_fp_co($sp)
             sw $a0,of_a0_co($fp)
             sw $a1,of_a1_co($fp)
 
@@ -485,50 +405,65 @@ FIN_CO:
 CASE_ON_CO:
 
       beqz $t3, ON_RL_CO        # if rule == RL -> ON_RL_CO
-                              # rule == RR
-      addi $t2, $t2, OE         # ant->o = OE
+
+      addi $t0,$zero,OE          # rule == RR
+      sw $t0, 8($t1)         # ant->o = OE
       j FIN_SWITCH_CO
 
 ON_RL_CO:
                               # rule == RL
-      addi $t2, $t2, OW         # ant->o = OW
+                              # ant->o = OW
+      addi $t0,$zero,OW
+      sw $t0, 8($t1)
       j FIN_SWITCH_CO
 
 CASE_OS_CO:
       beqz $t3, OS_RL_CO        # if rule == RL -> OS_RL_CO
-                              # rule == RR
-      addi $t2, $t2, OW         # ant->o = OW
+
+      addi $t0,$zero,OW
+      sw $t0, 8($t1)                         # rule == RR
+                              # ant->o = OW
       j FIN_SWITCH_CO
 
 OS_RL_CO:
                               # rule == RL
-      addi $t2, $t2, OE         # ant->o = OE
+                              # ant->o = OE
+      addi $t0,$zero,OE
+      sw $t0, 8($t1)
       j FIN_SWITCH_CO
 
 CASE_OE_CO:
       beqz $t3, OE_RL_CO        # if rule == RL -> OE_RL_CO
                               # rule == RR
-      addi $t2, $t2, OS         # ant->o = OS
+                              # ant->o = OS
+      addi $t0,$zero,OS
+      sw $t0,8($t1)
       j FIN_SWITCH_CO
 
 OE_RL_CO:
                               # rule == RL
-      addi $t2, $t2, ON         # ant->o = ON
+                              # ant->o = ON
+      addi $t0,$zero,ON
+      sw $t0, 8($t1)
       j FIN_SWITCH_CO
 
 CASE_OW_CO:
       beqz $t3, OW_RL_CO       # if rule == RL -> OW_RL_CO
                               # rule == RR
-      addi $t2, $t2, ON         # ant->o = ON
+                              # ant->o = ON
+      addi $t0,$zero,ON
+      sw $t0, 8($t1)
       j FIN_SWITCH_CO
 
 OW_RL_CO:
                               # rule == RL
-      addi $t2, $t2, OS         # ant->o = OS
+                              # ant->o = OS
+      addi $t0,$zero,OS
+      sw $t0, 8($t1)
       j FIN_SWITCH_CO
 
 FIN_SWITCH_CO:
-      sw $t2, 8($t1)            # Guardo el nuevo valor de ant->o
+      #sw $t2, 8($t1)            # Guardo el nuevo valor de ant->o
       move $v0, $t1             # Muevo la dirección de la ant a v0
 
       j FIN_CO
