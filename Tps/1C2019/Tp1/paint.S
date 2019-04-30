@@ -96,110 +96,93 @@ paint: #paint(void *ant1, void *grid1, void *palette1, void *rules1,  uint32_t i
 
 
       #Saved Registers Area
-      lw $t0, offset_a4($fp) #iterations
-      sw $t0,LRA_ITER($fp)
+      lw $t0, SS($fp)   #ant
+      sw $t0,LRA_ANT($fp)
 
-      lw $t0, offset_a2($fp)
+      lw $t0, offset_a2($fp) #palette
       sw $t0,LRA_P($fp)
 
       lw $t0, offset_a3($fp) #rules
       sw $t0,LRA_R($fp)
 
-      lw $t0, SS($fp)   #ant
-      sw $t0,LRA_ANT($fp)
+      lw $t0, offset_a4($fp) #iterations
+      sw $t0,LRA_ITER($fp)
 
       lw $t0, offset_a1($fp) #grid
       sw $t0,LRA_GRID($fp)
-
-      b LOOP_WHILE
 
       #codigo de la FUNCION
 LOOP_WHILE:
       lw $t0, LRA_ITER($fp) #t0 = iterations
       beqz $t0, FIN
 
-      lw $t1, LRA_P($fp) #t1 = palette (t1=p)
+      lw $t1, LRA_P($fp) #t1 = colour_t* palette
       addi $t1,$t1,4 #p++
 
       sw $t1, LRA_P($fp) #guardo el valores de la pallete (p)
 
-      b LOOP_FOR
 LOOP_FOR:
-      lw $t4, LRA_R($fp) #t4 = rules*
-      lw $t6,0($t4) #r*
-      addi $t6,$t6,1
-      beqz $t6,DECREMENTAR_ITER #si r*+1 = 0 termina
+      lw $s0, LRA_R($fp) #s0 = rotation_t* rules
+      lb $t2, 0($s0) #s1 = *rules
+      slti $t3, $t2, 0 #Si *rules es < 0 entonces t3 = 1, sino t3 = 0
+      bgtz $t3,DECREMENTAR_ITER
 
-      lw $t7,LRA_GRID($fp) #t7 = square_grid_t* grid
-      lw $t0, 8($t7) #t0 = grid->grid (colour_t **)
+      lw $s1,LRA_GRID($fp) #s1 = square_grid_t* grid
+      lw $t4, 8($s1) #t4 = (colour_t **) grid->grid
 
-      lw $t6, LRA_ANT($fp) #t6 = ant*
-      lw $t1, 0($t6) #t1 = ant->x
-      lw $t3, 4($t6) # t3 = ant->y
+      lw $s2, LRA_ANT($fp) #s2 = ant*
+      lw $t5, 0($s2) #t5 = ant->x
+      lw $t6, 4($s2) #t6 = ant->y
 
-      lw $t4,0($t7) #grid->width cant de columnas
-      mul $t3,$t3,$t0  #ant->y *grid->width
-      addu $t3,$t3,$t1 #(ant->x + ant->y*grid->width)
-      addi $t7,$zero,4 #size
-      mul $t3,$t3,$t7 #(ant->x + ant->y*grid->width) * size
-      addu $t0,$t3,$t0 #grid->grid[ant->x][ant->y]
+      lw $t7, 0($s1) #grid->width cant de columnas
+      mul $t5, $t5, $t7 #ant->x * grid->width
+      addu $t6, $t6, $t5 #(ant->y + ant->x*grid->width)
+      addi $t7, $zero, 4 #size
+      mul $t6,$t6,$t7 #(ant->x + ant->y*grid->width) * size
+      addu $t4,$t6,$t4 #grid->grid[ant->x][ant->y]
 
-      lw $t6,LRA_P($fp) #t6 = p (pallete)
-      lw $t5, 0($t6) #t5 = *p
-      sw $t5, 0($t0) #  grid->grid[ant->x][ant->y] = *p;
+      lw $s3,LRA_P($fp) #s3 = palette_t* p
+      lw $t7, 0($s3) #t7 = *p
+      sw $t7, 0($t4) #  grid->grid[ant->x][ant->y] = *p;
 
-      lw $a0, LRA_ANT($fp)
+      move $a0, $s2 #a0 = ant_t* ant
+      lw $a1,0($s0) #a1 = *r
 
-      lw $t7,LRA_R($fp)
-      lw $a1,0($t7) #t0 = *r
+      la $t7,change_orientation
+      jalr $t7
 
-      la $t1, change_orientation
-      jalr $t1
+      sw $v0, LRA_ANT($fp) #Guardamos lo que devolvio change_orientation
+      lw $a0, LRA_ANT($fp) #cargamos en a0 lo que acabamos de guardar (ant)
 
-      sw $v0, LRA_ANT($fp)
+      move $a1, $s1 #a1 = square_grid_t* grid
 
-      lw $a0, LRA_ANT($fp)
-
-      lw $a1, LRA_GRID($fp)
 
       la $t7,move_ant
       jalr $t7
 
-      sw $v0, LRA_ANT($fp)
+      sw $v0, LRA_ANT($fp) #Guardamos lo que devolvio move_ant
 
-      lw $t7,LRA_P($fp)
-      addi $t7,$t7,4
-      sw $t7,LRA_P($fp)
+      addi $s0, $s0, 4 #sumamos 1 a rotation_t* rules
+      sw $s0, LRA_R($fp) #guardamos el puntero actualizado para la próxima iteración
 
-      lw $t0, 0($t7) #t0 = *p
-      addi $t0,$t0,1
-      beqz $t0,RESET_PALLETE
-
-      lw $t0,LRA_R($fp)
-      addi $t0,$t0,4
-      sw $t0,LRA_R($fp)
-
+      move $t1, $s3 #t1 = palette_t* p
+      addi $t1,$t1,4 #actualizamos el puntero de p
+      lb $t2, 0($t1) #t2 = *p
+      slti $t3, $t2, 0 #Si *p es < 0 entonces t3 = 1, sino t3 = 0
+      bgtz $t3,RESET_PALLETE
       b LOOP_FOR
-
-
 
 RESET_PALLETE:
 
-      lw $t7,LRA_P($fp)
-
-
-      lw $t2, offset_a2($fp) #t2 = pallete*
-      lw $t1, 0($t2) #pallete[0]
-      lw $t1, 0($t7) # *p = pallete[0]
+      #lw $t5, offset_a2($fp) #t5 = pallete* pallete (parámetro)
+      lw $t6, 0($a2) #t6 = pallete[0]
+      sw $t6, 0($s3) # *p = pallete[0]
 
       b LOOP_FOR
 
-
-
 DECREMENTAR_ITER:
-      lw $t5,LRA_ITER($fp)
-      addi $t5,$t5,-4
-      sw $t5,LRA_ITER($fp)
+      addi $t0,$t0,-1 #t0 = iter
+      sw $t0,LRA_ITER($fp)
       b LOOP_WHILE
 
 FIN:
@@ -214,8 +197,6 @@ FIN:
       jr $ra
 
       .end paint
-
-
 
 #------------------------------------------------------------------------------------------------------------------------------
 #                                       FUNCION MOVE_ANT
@@ -247,21 +228,21 @@ move_ant: #ant_t* move_ant(ant_t *ant, square_grid_t *grid)
 
             #Codigo de la FUNCION
             lw $t1,of_a0_ma($fp) #t1= ant*
-            lw $t2,12($t1) #t2 = ant->o
+            lw $t2,8($t1) #t2 = ant->o
 
-            beqz $t2,CASE_ON
-
-            subu $t3,$t2,1
-
-            beqz $t3,CASE_OS
+            beqz $t2,CASE_ON_MA
 
             subu $t3,$t2,1
 
-            beqz $t3,CASE_OE
+            beqz $t3,CASE_OS_MA
 
-            subu $t3,$t2,1
+            subu $t3,$t3,1
 
-            beqz $t3,CASE_OW
+            beqz $t3,CASE_OE_MA
+
+            subu $t3,$t3,1
+
+            beqz $t3,CASE_OW_MA
 
 FIN_MA:
            #desarmo el stack
@@ -273,7 +254,7 @@ FIN_MA:
             jr $ra
 
 
-CASE_ON:
+CASE_ON_MA:
       lw $t5,0($t1) #t5 = ant->x
 
       lw $t6,of_a1_ma($fp) #t6 = grid*
@@ -290,7 +271,7 @@ ANTX_ON:
       sw $zero,0($t1) #ant->x = 0
       j FIN_SWITCH
 
-CASE_OS:
+CASE_OS_MA:
       lw $t5,0($t1) #t5 = ant->x
 
       beqz $t5,ANTX_OS
@@ -307,7 +288,7 @@ ANTX_OS:
       sw $t7,0($t1) #ant->x = grid->height-1
       j FIN_SWITCH
 
-CASE_OE:
+CASE_OE_MA:
       lw $t5,4($t1) #t5 = ant->y
 
       lw $t6,of_a1_ma($fp) #t6 = grid*
@@ -325,7 +306,7 @@ ANTX_OE:
       sw $zero,4($t1) #ant->y = 0
       j FIN_SWITCH
 
-CASE_OW:
+CASE_OW_MA:
       lw $t5,4($t1) #t5 = ant->y
 
       beqz $t5,ANTX_OE
