@@ -1,8 +1,8 @@
 #CONSTANTES DE LA FUNCION PAINT
 #define SS 56
-#define offset_ra 44
-#define offset_fp 40
-#define offset_gp 36
+#define offset_ra 48
+#define offset_fp 44
+#define offset_gp 40
 
 #define offset_a1 60
 #define offset_a2 64
@@ -14,13 +14,6 @@
 #define LRA_P 20
 #define LRA_R 24
 #define LRA_ANT 16
-
-#CONSTANTES DE LA FUNCION BEGINNING_ANT
-#define SS_ba 8
-#define of_fp_ba 4
-#define of_gp_ba 0
-
-#define of_a0_ba 8
 
 #CONSTANTES DE LA FUNCION MOVE_ANT
 #define SS_ma 8
@@ -116,14 +109,19 @@ LOOP_WHILE:
       lw $t0, LRA_ITER($fp) #t0 = iterations
       beqz $t0, FIN
 
-      lw $t1, LRA_P($fp) #t1 = colour_t* palette
-      addi $t1,$t1,4 #p++
+      lw $t6, offset_a2($fp) #t6 = pallete[0]
+      #sw $t6, LRA_P($fp)  #reseteo en el stack P para volver a comenzar el for
 
-      sw $t1, LRA_P($fp) #guardo el valores de la pallete (p)
+      addi $t6,$t6,4 #p++
+
+      sw $t6, LRA_P($fp) #guardo el valores de la pallete (p)
+
+      lw $s4, offset_a3($fp) #reseteo R para el prox ciclo
+      sw $s4, LRA_R($fp)
 
 LOOP_FOR:
       lw $s0, LRA_R($fp) #s0 = rotation_t* rules
-      lb $t2, 0($s0) #s1 = *rules
+      lw $t2, 0($s0) #s1 = *rules
       slti $t3, $t2, 0 #Si *rules es < 0 entonces t3 = 1, sino t3 = 0
       bgtz $t3,DECREMENTAR_ITER
 
@@ -134,16 +132,19 @@ LOOP_FOR:
       lw $t5, 0($s2) #t5 = ant->x
       lw $t6, 4($s2) #t6 = ant->y
 
-      lw $t7, 0($s1) #grid->width cant de columnas
-      mul $t5, $t5, $t7 #ant->x * grid->width
-      addu $t6, $t6, $t5 #(ant->y + ant->x*grid->width)
-      addi $t7, $zero, 4 #size
-      mul $t6,$t6,$t7 #(ant->x + ant->y*grid->width) * size
-      addu $t4,$t6,$t4 #grid->grid[ant->x][ant->y]
+      addi $t7, $zero, 4 #size de un int32
+      mul $t5,$t5,$t7 #sizeof(x)*x
+      mul $t6,$t6,$t7#sizeof(y)*y
+
+      addu $t4,$t4,$t5 #grid->grid[ant->x]
+      lw $t5,0($t4) #dereferenciamos y obtenemos el puntero
+
+      addu $t5,$t5,$t6 # obtenemos el puntero que apunta a grid->grid[ant->x][ant->y]
+
 
       lw $s3,LRA_P($fp) #s3 = palette_t* p
       lw $t7, 0($s3) #t7 = *p
-      sw $t7, 0($t4) #  grid->grid[ant->x][ant->y] = *p;
+      sw $t7, 0($t5) #  grid->grid[ant->x][ant->y] = *p;
 
       move $a0, $s2 #a0 = ant_t* ant
       lw $a1,0($s0) #a1 = *r
@@ -165,24 +166,32 @@ LOOP_FOR:
       addi $s0, $s0, 4 #sumamos 1 a rotation_t* rules
       sw $s0, LRA_R($fp) #guardamos el puntero actualizado para la próxima iteración
 
-      move $t1, $s3 #t1 = palette_t* p
+
+      lw $t1, LRA_P($fp) #t1 = palette_t* p
       addi $t1,$t1,4 #actualizamos el puntero de p
+      sw $t1,LRA_P($fp)
+
       lb $t2, 0($t1) #t2 = *p
       slti $t3, $t2, 0 #Si *p es < 0 entonces t3 = 1, sino t3 = 0
+
+
       bgtz $t3,RESET_PALLETE
+
       b LOOP_FOR
 
 RESET_PALLETE:
 
-      #lw $t5, offset_a2($fp) #t5 = pallete* pallete (parámetro)
-      lw $t6, 0($a2) #t6 = pallete[0]
-      sw $t6, 0($s3) # *p = pallete[0]
+
+      lw $t6, offset_a2($fp) #t6 = pallete[0]
+      sw $t6, LRA_P($fp) # p = pallete
 
       b LOOP_FOR
 
 DECREMENTAR_ITER:
-      addi $t0,$t0,-1 #t0 = iter
+      lw $t0,LRA_ITER($fp)
+      addi $t0,$t0,-1 #t0 = iter--
       sw $t0,LRA_ITER($fp)
+
       b LOOP_WHILE
 
 FIN:
@@ -309,7 +318,7 @@ ANTX_OE:
 CASE_OW_MA:
       lw $t5,4($t1) #t5 = ant->y
 
-      beqz $t5,ANTX_OE
+      beqz $t5,ANTX_OW
       addi $t5,$t5,-1 #ant->y--
       sw $t5,4($t1) #ant->y = ant->y--
       j FIN_SWITCH
@@ -337,9 +346,10 @@ FIN_SWITCH:
 #|r         |   ABA DE PAINT
 #|ant       |
 #|----------|
+#|fp        |
 #|gp        |   SRA
 #|----------|
-      .globl change_orientationf
+      .globl change_orientation
       .ent change_orientation
 change_orientation: #ant_t* change_orientation(ant_t *ant, rotation_t rule)
 
@@ -347,10 +357,11 @@ change_orientation: #ant_t* change_orientation(ant_t *ant, rotation_t rule)
             subu $sp,$sp,SS_co
 
             #|fp        |
+            sw $fp,of_fp_co($sp)
             sw $gp,of_gp_co($sp)
             move $fp,$sp
 
-            sw $fp,of_fp_co($sp)
+
             sw $a0,of_a0_co($fp)
             sw $a1,of_a1_co($fp)
 
@@ -361,17 +372,17 @@ change_orientation: #ant_t* change_orientation(ant_t *ant, rotation_t rule)
 
             beqz $t2,CASE_ON_CO
 
-            subu $t3,$t2,1
+            subu $t4,$t2,1
 
-            beqz $t3,CASE_OS_CO
+            beqz $t4,CASE_OS_CO
 
-            subu $t3,$t2,1
+            subu $t4,$t4,1
 
-            beqz $t3,CASE_OE_CO
+            beqz $t4,CASE_OE_CO
 
-            subu $t3,$t2,1
+            subu $t4,$t4,1
 
-            beqz $t3,CASE_OW_CO
+            beqz $t4,CASE_OW_CO
 
 FIN_CO:
            #desarmo el stack
