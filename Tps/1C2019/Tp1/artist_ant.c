@@ -146,6 +146,16 @@ main(int argc, char **argv)
 
   grid_out();
 
+  free(rules);
+  free(palette);
+  for (int i = 0; i < grid_width; i++) {
+    free(square_grid->grid[i]);
+  }
+  free(square_grid->grid);
+  free(colour_spec);
+  free(rule_spec);
+
+
   return 0;
 }
 
