@@ -31,7 +31,7 @@ show_help(char *p) {
     fprintf(stderr, "  -g --grid: wxh\n");
     fprintf(stderr, "  -p --palette: Combination of R|G|B|Y|N|W\n");
     fprintf(stderr, "  -r --rules: Combination of L|R\n");
-    fprintf(stderr, "  -n --times: Iterations\n");
+    fprintf(stderr, "  -t --times: Iterations\n");
     fprintf(stderr, "  -h --help: Print this message and exit\n");
     fprintf(stderr, "  -v --verbose: Version number\n");
 }
@@ -39,7 +39,7 @@ show_help(char *p) {
 static void
 show_version()
 {
-  printf("v0.0.0\n");
+  printf("v1.0.0\n");
 }
 
 static colour_t get_colour(char c);
@@ -260,4 +260,3 @@ get_colour(char c)
 
   return (p - index);
 }
-
