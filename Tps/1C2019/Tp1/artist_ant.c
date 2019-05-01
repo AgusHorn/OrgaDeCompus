@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <assert.h>
 
+#include "paint.h"
 #include "ant_engine.h"
 #include "artist_ant.h"
 

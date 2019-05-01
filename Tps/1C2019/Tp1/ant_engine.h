@@ -1,11 +1,6 @@
 #ifndef __ANT_ENGINE_H__
 #define __ANT_ENGINE_H__
 
-#include <unistd.h>
-#include <stdint.h>
-#include <stdio.h>
-
-void* paint(void *ant, void *grid, void *palette, void *rules,  uint32_t iterations);
 
 #define panic(s)       \
   do {                 \
