@@ -34,8 +34,7 @@ paint(void *ant1, void *grid1, void *palette1, void *rules1,  uint32_t iteration
 		}
 		--iterations;
 	}
-	free(rules);
-	free(palette);
+
  	return grid;
 }
 
