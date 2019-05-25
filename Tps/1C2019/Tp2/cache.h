@@ -26,7 +26,7 @@ unsigned int get_offset (unsigned int address);
 //address.
 int find_set(int address);
 
-//Devuelve la vı́a en la que está el bloque más “viejo” 
+//Devuelve la vı́a en la que está el bloque más “viejo”
 //dentro de un conjunto, utilizando el campo correspondiente de
 //los metadatos de los bloques del conjunto.
 unsigned int select_oldest(unsigned int setnum);
@@ -36,10 +36,10 @@ unsigned int select_oldest(unsigned int setnum);
 void read_tocache(unsigned int blocknum, unsigned int way, unsigned int set);
 
 //Escribe el char en la dirección address de caché??
-void write_tocache(unsigned int address, unsigned char);
+void write_tocache(unsigned int way,unsigned int index,unsigned int offset, unsigned char value);
 
-//Busca el valor del byte correspondiente a la posición address 
-//en la caché; si éste nose encuentra en la caché debe cargar 
+//Busca el valor del byte correspondiente a la posición address
+//en la caché; si éste nose encuentra en la caché debe cargar
 //ese bloque. El valor de retorno siempre debe ser el valor del byte almacenado en la dirección indicada.
 int read_byte(int address);
 

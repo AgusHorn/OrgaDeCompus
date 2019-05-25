@@ -59,6 +59,8 @@ void realizar_write(char* direccion, char* valor){
 
 bool procesar_archivo(const char* nombre){
   FILE* archivo = fopen(nombre,"r");
+  
+
   if(!archivo){
     fprintf (stderr,"Error al tratar de abrir archivo.\n");
     return false;
