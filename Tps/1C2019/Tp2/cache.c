@@ -42,7 +42,7 @@ struct cache {
 block_t init_block(){
     block_t block;
     block.priority = 0;
-    block.valid = 1;
+    block.valid = 0;
     return block;
 }
 
@@ -50,8 +50,7 @@ way_t init_way(){
   counter = 1;
   way_t way;
   for(int i = 0; i < BLOCKSSET; i++){
-    way.blocks[i].valid = 1;
-    way.blocks[i].priority = 0;
+    way.blocks[i] = init_block();
   }
   return way;
 }
@@ -150,7 +149,7 @@ int read_byte(int address){
     cache.misses++;
     way = select_oldest(index);
     read_tocache(address,way,index); //Llevo bloque a la caché.
-  
+
   }
   return (0xFF & (int)cache.ways[way].blocks[index].bytes[offset]); //TODO: revisar este &
 }
