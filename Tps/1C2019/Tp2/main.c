@@ -59,7 +59,6 @@ void realizar_write(char* direccion, char* valor){
 
 bool procesar_archivo(const char* nombre){
   FILE* archivo = fopen(nombre,"r");
-  
 
   if(!archivo){
     fprintf (stderr,"Error al tratar de abrir archivo.\n");
@@ -69,8 +68,8 @@ bool procesar_archivo(const char* nombre){
 
   while((leidos = getline(&linea,&capacidad,archivo)) > 0){
     if(strcmp(linea, "MR\n") == 0){
-      int miss_rate = get_miss_rate();
-      printf("Miss_rate es: %d\n", miss_rate);
+      float miss_rate = get_miss_rate();
+      printf("Miss_rate es: %f\n", miss_rate);
       float t_miss = (float)(LAT + ((BS - WS)*1000 / (WS * BW)));
       printf("Tiempo de acceso promedio:  %d nanosegundos.\n",(int)(miss_rate*((int)t_miss)/100) );
     }
@@ -103,7 +102,7 @@ int main(int argc, char *argv[]){
   }
 
   init();
-
+  printf("el nombre del archivo es %s\n", argv[1]);
   if(!procesar_archivo(argv[1])){
     fprintf (stderr,"Error al procesar el archivo.\n");
     exit(EXIT_FAILURE);

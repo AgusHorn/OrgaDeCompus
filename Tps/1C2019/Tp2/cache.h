@@ -50,6 +50,6 @@ int read_byte(int address);
 int write_byte(int address, char value);
 
 //Devuelve el porcentaje de misses.
-int get_miss_rate();
+float get_miss_rate();
 
 #endif // CACHE_H

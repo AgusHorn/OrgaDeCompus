@@ -42,7 +42,7 @@ struct cache {
 block_t init_block(){
     block_t block;
     block.priority = 0;
-    block.valid = 0;
+    block.valid = 1;
     return block;
 }
 
@@ -50,7 +50,7 @@ way_t init_way(){
   counter = 1;
   way_t way;
   for(int i = 0; i < BLOCKSSET; i++){
-    way.blocks[i].valid = 0;
+    way.blocks[i].valid = 1;
     way.blocks[i].priority = 0;
   }
   return way;
@@ -79,20 +79,20 @@ void init(){
  */
 
 unsigned int get_offset (unsigned int address){
-  return (address & 0x003F);
+  return (address & 0x0000003F);
 }
 
 unsigned int get_tag(int address){
-  return (address) >> 9;
+  return ((address) >> 9) & 0x0000007F;
 }
 
 unsigned int get_index(int address){
-    return (address & 0x0380) >> 6;
+    return (address & 0x000001C0) >> 6;
 }
 
 bool is_hit(int index, int tag, int* way){
   for(int i = 0; i<NWAYS; i++){
-    if(cache.ways[i].blocks[index].valid == 1 && cache.ways[i].blocks[index].tag == tag){
+    if(cache.ways[i].blocks[index].valid  && cache.ways[i].blocks[index].tag == tag){
         *way = i;
       return true;
     }
@@ -104,7 +104,7 @@ unsigned int select_oldest(unsigned int index){
   long priorityOld = cache.ways[0].blocks[index].priority;
   int way = 0;
   for(int i = 0; i < NWAYS; i++){
-    if(cache.ways[i].blocks[index].priority < priorityOld  && cache.ways[i].blocks[index].valid && cache.ways[i].blocks[index].priority ){
+    if(cache.ways[i].blocks[index].priority < priorityOld ){
       way = i;
     }
   }
@@ -141,6 +141,7 @@ int read_byte(int address){
   unsigned int index = get_index(address);
   unsigned int offset = get_offset(address);
   int way;
+  //printf("EL TAG ES :%d\n",tag );
   bool hit = is_hit(index, tag, &way);
   cache.access++;
 
@@ -149,6 +150,7 @@ int read_byte(int address){
     cache.misses++;
     way = select_oldest(index);
     read_tocache(address,way,index); //Llevo bloque a la caché.
+    printf("es miss\n" );
   }
   return (0xFF & (int)cache.ways[way].blocks[index].bytes[offset]); //TODO: revisar este &
 }
@@ -161,7 +163,7 @@ int write_byte(int address, char value){
   unsigned int tag = get_tag(address);
   unsigned int index = get_index(address);
   unsigned int offset = get_offset(address);
-   int way;
+  int way;
   bool hit = is_hit(index, tag, &way);
   cache.access++;
 
@@ -176,7 +178,7 @@ int write_byte(int address, char value){
 }
 
 //Devuelve el porcentaje de misses.
-int get_miss_rate(){
+float get_miss_rate(){
   if(cache.misses == 0 || cache.access == 0) return 0;
-  return (cache.misses*100/cache.access);
+  return (cache.misses*100.0/cache.access);
 }
