@@ -150,7 +150,7 @@ int read_byte(int address){
     cache.misses++;
     way = select_oldest(index);
     read_tocache(address,way,index); //Llevo bloque a la caché.
-    printf("es miss\n" );
+  
   }
   return (0xFF & (int)cache.ways[way].blocks[index].bytes[offset]); //TODO: revisar este &
 }
