@@ -56,6 +56,9 @@ void realizar_write(char* direccion, char* valor){
   printf("Write devuelve: %d\n",(unsigned int)write_byte(address, valor_char));
 }
 
+void flush_cache(){
+  flush();
+}
 
 bool procesar_archivo(const char* nombre){
   FILE* archivo = fopen(nombre,"r");
@@ -86,7 +89,9 @@ bool procesar_archivo(const char* nombre){
       char* valor = strtok(NULL, " ");
       realizar_write(direccion, valor);
     }
-
+    if(strcmp(comando, "FLUSH") == 0){
+      flush_cache();
+    }
   }
 
   free(linea);

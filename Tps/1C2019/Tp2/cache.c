@@ -70,6 +70,17 @@ void init(){
     }
 }
 
+void flush(){
+  cache.misses = 0;
+  cache.access = 0;
+  for(int i = 0; i < NWAYS; i++){
+    for(int j = 0; j < BLOCKSSET; j++){
+      cache.ways[i].blocks[j].valid = 0;
+      cache.ways[i].blocks[j].priority = 0;
+    }
+  }
+}
+
 /* CACHE ADDRESS:
  *  ______________________________
  * |   TAG   |  INDEX  |  OFFSET |

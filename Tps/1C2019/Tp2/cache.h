@@ -18,6 +18,9 @@ typedef struct cache cache_t;
 //tasa de misses = 0.
 void init();
 
+//Flushea la cache.
+void flush();
+
 //Devuelve el offset del byte del bloque de memoria que
 //mapea la dirección address.
 unsigned int get_offset (unsigned int address);
