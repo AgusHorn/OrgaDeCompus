@@ -27,7 +27,7 @@ unsigned int get_offset (unsigned int address);
 
 //Devuelve el conjunto al que mapea la direccion
 //address.
-int find_set(int address);
+unsigned int find_set(int address);
 
 //Devuelve la vı́a en la que está el bloque más “viejo”
 //dentro de un conjunto, utilizando el campo correspondiente de

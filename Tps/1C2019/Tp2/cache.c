@@ -96,7 +96,7 @@ unsigned int get_tag(int address){
   return ((address) >> 9) & 0x0000007F;
 }
 
-unsigned int get_index(int address){
+unsigned int find_set(int address){
     return (address & 0x000001C0) >> 6;
 }
 
@@ -148,7 +148,7 @@ int read_byte(int address){
     return -1; //ERROR, TODO:Setear el errno
   }
   unsigned int tag = get_tag(address);
-  unsigned int index = get_index(address);
+  unsigned int index = find_set(address);
   unsigned int offset = get_offset(address);
   int way;
   //printf("EL TAG ES :%d\n",tag );
@@ -171,7 +171,7 @@ int write_byte(int address, char value){
   }
 
   unsigned int tag = get_tag(address);
-  unsigned int index = get_index(address);
+  unsigned int index = find_set(address);
   unsigned int offset = get_offset(address);
   int way;
   bool hit = is_hit(index, tag, &way);
@@ -179,11 +179,11 @@ int write_byte(int address, char value){
 
   if(hit ){ //es un HIT!
     write_tocache(way,index,offset,value);
-    memoria[address] = value;
   } else{  //es un miss:(
     cache.misses++;
-    memoria[address] = value;
   }
+  memoria[address] = value;
+
   return (0xFF & (int)value); //TODO: revisar este &
 }
 
