@@ -8,17 +8,15 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <time.h>
+#include <math.h>
 
 
 #include "cache.h"
 
 #define LAT 100 //en nanosegundos
-#define BW 133 //Mhz con un ancho de bus de 1 word (16 bits)
+#define Tmp 5 //(1/BW) en nanosegundos con un ancho de bus de 1 word (16 bits)
 #define BS 64 //en bytes
 #define WS 2 //WORD SIZE EN BYTES
-
-
-//TODO: Medir tiempos de ejecucion para despues poder comparar.
 
 void realizar_read(char* direccion){
 
@@ -50,7 +48,6 @@ void realizar_write(char* direccion, char* valor){
     printf("Falta el valor a escribir.\n");
   }
 
-  //TODO: No se como pasar el valor de char* a char
   unsigned int value = atoi(valor);//esto me toma solo el primer valor y vienen 3
   char valor_char = (char)value;
   printf("Write devuelve: %d\n",(unsigned int)write_byte(address, valor_char));
@@ -73,8 +70,8 @@ bool procesar_archivo(const char* nombre){
     if(strcmp(linea, "MR\n") == 0){
       float miss_rate = get_miss_rate();
       printf("Miss_rate es: %f\n", miss_rate);
-      float t_miss = (float)(LAT + ((BS - WS)*1000 / (WS * BW)));
-      printf("Tiempo de acceso promedio:  %d nanosegundos.\n",(int)(miss_rate*((int)t_miss)/100) );
+      int t_miss = LAT + ((BS - WS)/WS) * Tmp;
+      printf("Tiempo de acceso promedio:  %d nanosegundos.\n",(int)(miss_rate*(int)t_miss)/100);
     }
     char* comando = strtok(linea, " ");
     if(strcmp(comando, "R") == 0){
