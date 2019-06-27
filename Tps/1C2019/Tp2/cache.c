@@ -97,7 +97,7 @@ unsigned int get_tag(int address){
 }
 
 unsigned int find_set(int address){
-    return (address & 0x000001C0) >> 6;
+    return (address>> 6) & 0x0007 ;
 }
 
 bool is_hit(int index, int tag, int* way){
@@ -126,13 +126,18 @@ unsigned int select_oldest(unsigned int index){
 //y vı́a indicados en la memoria caché.
 void read_tocache(unsigned int blocknum, unsigned int way, unsigned int set){
 
-  cache.ways[way].blocks[set].bytes[get_offset(blocknum)] = memoria[blocknum];
+  int pos = blocknum * 64;
+
+  for (int i = 0; i < 64; i++) {
+    cache.ways[way].blocks[set].bytes[i] = memoria[(pos) + i];
+  }
   cache.ways[way].blocks[set].priority = counter;
-  cache.ways[way].blocks[set].tag = get_tag(blocknum);
+  cache.ways[way].blocks[set].tag = get_tag(pos);
   cache.ways[way].blocks[set].valid = 1;
   counter++;
 
 }
+
 
 
 //Escribe el char en la dirección address de caché??
@@ -159,10 +164,10 @@ int read_byte(int address){
   if (!hit){ //es un HIT!
     cache.misses++;
     way = select_oldest(index);
-    read_tocache(address,way,index); //Llevo bloque a la caché.
+    read_tocache(floor(address/64),way,index); //Llevo bloque a la caché.
 
   }
-  return (0xFF & (int)cache.ways[way].blocks[index].bytes[offset]); //TODO: revisar este &
+  return (0xFF & (int)cache.ways[way].blocks[index].bytes[offset]); 
 }
 
 int write_byte(int address, char value){
@@ -184,7 +189,7 @@ int write_byte(int address, char value){
   }
   memoria[address] = value;
 
-  return (0xFF & (int)value); //TODO: revisar este &
+  return (0xFF & (int)value);
 }
 
 //Devuelve el porcentaje de misses.
